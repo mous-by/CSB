@@ -10,3 +10,7 @@ Schedule::command('backup:run')->dailyAt(config('backup.time'))->withoutOverlapp
 
 // File d'attente (e-mails aux abonnés, notifications) : traitée chaque minute par le cron, sans démon permanent.
 Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping();
+// Conversions des vidéos de témoignages : file à part, une conversion peut durer plusieurs minutes.
+Schedule::command('queue:work --queue=videos --stop-when-empty --timeout=1900 --tries=1')->everyMinute()->withoutOverlapping(60);
+// Envois de vidéos abandonnés (jamais rattachés à un témoignage) : supprimés après 24 h.
+Schedule::command('videos:clean')->daily();

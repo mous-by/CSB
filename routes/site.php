@@ -10,6 +10,8 @@ use App\Http\Controllers\Site\PageController;
 use App\Http\Controllers\Site\RealisationController;
 use App\Http\Controllers\Site\SearchController;
 use App\Http\Controllers\Site\SeoController;
+use App\Http\Controllers\Site\TemoignageController;
+use App\Http\Controllers\VideoUploadController;
 use Illuminate\Support\Facades\Route;
 
 // Site public (cahier §4) : sans authentification, routes nommées `site.*` (test d'architecture). Les formulaires
@@ -32,6 +34,11 @@ Route::name('site.')->group(function () {
     Route::get('/commande', [BoutiqueController::class, 'checkout'])->name('commande');
     Route::post('/commande', [BoutiqueController::class, 'store'])->middleware('throttle:demandes')->name('commande.store');
     Route::get('/commande/{number}/{token}', [BoutiqueController::class, 'suivi'])->where('token', '[A-Za-z0-9]{48}')->name('commande.suivi');
+    // Témoignages (vidéo et écrit) ; envoi d'une vidéo par morceaux de 1 Mo (300 Mo au plus).
+    Route::get('/temoignages', [TemoignageController::class, 'index'])->name('temoignages.index');
+    Route::get('/temoignages/partager', [TemoignageController::class, 'create'])->name('temoignages.create');
+    Route::post('/temoignages/partager', [TemoignageController::class, 'store'])->middleware('throttle:demandes')->name('temoignages.store');
+    Route::post('/temoignages/video', VideoUploadController::class)->middleware('throttle:400,1')->name('temoignages.video');
     Route::get('/actualites', [ActualiteController::class, 'index'])->name('actualites.index');
     Route::get('/actualites/{article:slug}', [ActualiteController::class, 'show'])->name('actualites.show');
 

@@ -31,7 +31,7 @@ class PageController extends Controller
     {
         $sections = [];
 
-        $temoignages = Temoignage::published()->ordered()->limit(6)->get();
+        $temoignages = Temoignage::with('photo')->published()->orderByDesc('is_featured')->ordered()->limit(12)->get();
         if ($temoignages->isNotEmpty()) {
             $sections[] = ['view' => 'site.home._temoignages', 'data' => ['temoignages' => $temoignages]];
         }

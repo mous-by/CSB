@@ -50,5 +50,17 @@
         </div>
     </section>
 
+    <section class="section pt-0">
+        <div class="container">
+            <div class="share-cta">
+                <div>
+                    <h2 class="h4 mb-1"><i class='bx bx-video text-orange' aria-hidden="true"></i> Nos clients en parlent</h2>
+                    <p class="mb-0">Écoutez-les raconter leur expérience avec CSB, en vidéo.</p>
+                </div>
+                <a href="{{ route('site.temoignages.index') }}" class="btn btn-outline-primary btn-lg">Voir les témoignages</a>
+            </div>
+        </div>
+    </section>
+
     @include('site.partials.cta', ['title' => 'Et si votre projet était le prochain ?', 'text' => 'Présentez-nous votre besoin : nous vous proposons une solution adaptée et chiffrée.'])
 @endsection

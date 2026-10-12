@@ -98,7 +98,7 @@
     }
 
     /* ——— Apparition progressive et compteurs ——— */
-    var revealSelector = '[data-reveal], .section-title, .csb-card, .testimonial, .steps li, .detail-panel, .cta-band, .stat, .hero-tile, .filter-bar';
+    var revealSelector = '[data-reveal], .section-title, .csb-card, .testimonial, .video-testimonial, .share-cta, .steps li, .detail-panel, .cta-band, .stat, .hero-tile, .filter-bar';
 
     function initReveal(root) {
         var items = (root || document).querySelectorAll(revealSelector);
@@ -894,6 +894,53 @@
         sync();
     }
 
+    /* ——— Témoignages vidéo : lecture en grand ([data-video-play]) ———
+       Lecteur HTML5 du navigateur (vidéo hébergée par le site, aucun script externe) ; Échap ou clic hors de la vidéo ferme. */
+    function initVideoLightbox() {
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest('[data-video-play]');
+            if (!trigger) return;
+            e.preventDefault();
+            var box = document.createElement('div');
+            box.className = 'video-lightbox';
+            box.setAttribute('role', 'dialog');
+            box.setAttribute('aria-modal', 'true');
+            box.setAttribute('aria-label', 'Témoignage de ' + (trigger.dataset.videoTitle || ''));
+            var video = document.createElement('video');
+            video.src = trigger.dataset.videoPlay;
+            if (trigger.dataset.videoPoster) video.poster = trigger.dataset.videoPoster;
+            video.controls = true;
+            video.autoplay = true;
+            video.setAttribute('playsinline', '');
+            var close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'video-lightbox-close';
+            close.setAttribute('aria-label', 'Fermer la vidéo');
+            close.innerHTML = "<i class='bx bx-x' aria-hidden='true'></i>";
+            var title = document.createElement('div');
+            title.className = 'video-lightbox-title';
+            title.textContent = trigger.dataset.videoTitle || '';
+            box.appendChild(video);
+            box.appendChild(close);
+            box.appendChild(title);
+            document.body.appendChild(box);
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(function () { box.classList.add('open'); });
+            close.focus();
+            function shut() {
+                video.pause();
+                box.remove();
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', onKey);
+                trigger.focus();
+            }
+            function onKey(ev) { if (ev.key === 'Escape') shut(); }
+            close.addEventListener('click', shut);
+            box.addEventListener('click', function (ev) { if (ev.target === box) shut(); });
+            document.addEventListener('keydown', onKey);
+        });
+    }
+
     /* ——— Démarrage ——— */
     document.addEventListener('DOMContentLoaded', function () {
         initScroll();
@@ -915,6 +962,7 @@
         initLoops();
         initCart();
         initCheckout();
+        initVideoLightbox();
     });
 
     CSB.initReveal = initReveal;

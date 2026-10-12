@@ -512,3 +512,39 @@
   .cart-line-total { grid-area: total; min-width: 0; }
   .cart-line > form[data-cart-remove] { grid-area: remove; }
 }
+
+/* Témoignages en vidéo */
+.video-testimonial { height: 100%; background: #fff; border: 1px solid var(--csb-border); border-radius: 18px; overflow: hidden; box-shadow: 0 12px 30px rgba(16, 59, 142, .1); display: flex; flex-direction: column; transition: box-shadow .3s; }
+.video-testimonial:hover { box-shadow: 0 24px 50px rgba(16, 59, 142, .2); }
+.vt-media { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 0; background: linear-gradient(135deg, #0d2c6b, #1d5bc4); overflow: hidden; cursor: pointer; text-decoration: none; }
+.vt-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s ease; }
+.video-testimonial:hover .vt-media img { transform: scale(1.06); }
+.vt-media::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(5, 20, 50, .55)); }
+.vt-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, .5); font-size: 4rem; }
+.vt-play { position: absolute; z-index: 1; left: 50%; top: 50%; width: 68px; height: 68px; margin: -34px 0 0 -34px; border-radius: 50%; background: var(--csb-orange); color: #1b1203; font-size: 2.6rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 0 rgba(245, 130, 32, .6); animation: vt-pulse 2.4s infinite; transition: transform .25s; }
+.vt-media:hover .vt-play, .vt-media:focus-visible .vt-play { transform: scale(1.12); }
+@keyframes vt-pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 130, 32, .55); } 70% { box-shadow: 0 0 0 22px rgba(245, 130, 32, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 130, 32, 0); } }
+.vt-duration { position: absolute; z-index: 1; right: 10px; bottom: 10px; background: rgba(0, 0, 0, .65); color: #fff; font-size: .78rem; font-weight: 700; padding: .15rem .5rem; border-radius: 6px; }
+.vt-body { padding: 1rem 1.1rem 1.1rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
+.vt-quote { margin: 0; color: #3d4a66; font-style: italic; font-size: .92rem; flex: 1; }
+.vt-author { display: flex; align-items: center; gap: .6rem; }
+.vt-author img, .testimonial-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.vt-author strong, .vt-author small { display: block; line-height: 1.2; }
+.vt-author small { color: var(--csb-muted); font-size: .78rem; }
+.stars { color: #f5a623; font-size: 1.05rem; letter-spacing: 1px; }
+.share-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; padding: 1.6rem 2rem; border-radius: 20px; background: linear-gradient(135deg, var(--csb-blue-soft), #fff7ef); border: 1px solid var(--csb-border); }
+.star-input { display: inline-flex; flex-direction: row-reverse; gap: .2rem; }
+.star-input input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.star-input label { font-size: 2rem; color: #d3dae8; cursor: pointer; transition: color .15s, transform .15s; }
+.star-input label:hover, .star-input label:hover ~ label, .star-input input:checked ~ label { color: #f5a623; }
+.star-input input:focus-visible + label { outline: 3px solid var(--csb-orange); outline-offset: 2px; border-radius: 6px; }
+.star-input label:hover { transform: scale(1.15); }
+.video-upload-preview { width: 100%; max-height: 260px; border-radius: 12px; background: #000; }
+/* Lecteur plein écran */
+.video-lightbox { position: fixed; inset: 0; z-index: 2000; background: rgba(4, 12, 30, .92); display: flex; align-items: center; justify-content: center; padding: 4vh 4vw; opacity: 0; transition: opacity .25s; }
+.video-lightbox.open { opacity: 1; }
+.video-lightbox video { max-width: 100%; max-height: 86vh; border-radius: 14px; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); background: #000; }
+.video-lightbox-close { position: absolute; top: 18px; right: 22px; width: 46px; height: 46px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .15); color: #fff; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; }
+.video-lightbox-close:hover { background: var(--csb-orange); color: #1b1203; }
+.video-lightbox-title { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; color: rgba(255, 255, 255, .85); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .vt-play { animation: none; } }

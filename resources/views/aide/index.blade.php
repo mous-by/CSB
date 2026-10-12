@@ -84,6 +84,12 @@
                 'Synchronisation du stock → « Modèle Excel », complétez les quantités (et les prix si besoin), puis « Synchroniser ». Quantité 0 : le produit passe « Indisponible » et ne peut plus être commandé.',
                 'Pour une mise à jour automatique, l\'administrateur crée un jeton d\'API (affiché une seule fois) et le donne à votre logiciel de stock. Chaque synchronisation apparaît dans le journal, avec les références inconnues.',
             ]],
+            ['bx bx-video', 'Témoignages en vidéo', [
+                'Témoignages → « Ajouter » : nom, fonction, organisation, note, texte, photo, et une vidéo (envoyée depuis votre ordinateur ou téléphone, 300 Mo au plus) ou un lien YouTube / Facebook / TikTok.',
+                'La vidéo envoyée est convertie en quelques minutes (format lisible sur tous les téléphones, image d\'aperçu, durée) : « Préparation… » s\'affiche en attendant.',
+                'Vos clients peuvent envoyer eux-mêmes leur témoignage depuis la page « Partager mon expérience » du site : il arrive « À modérer » (pastille, cloche, e-mail, WhatsApp). Regardez-le, puis cochez « Publié ». Leur téléphone ou e-mail n\'est jamais publié.',
+                '« Mis en avant » place un témoignage en premier sur le site et l\'accueil.',
+            ]],
             ['bx bx-support', 'Espace client et tickets', [
                 'Les clients créent leur compte sur le site (icône personne en haut à droite) ; vous pouvez aussi les créer depuis Clients (une invitation leur est envoyée) et déposer des documents (devis, factures) dans leur espace.',
                 'Un client ouvre un ticket d\'assistance depuis son espace. Tickets → fiche : « Envoyer au client » répond par e-mail ; cochez « Note interne » pour une information réservée à l\'équipe.',

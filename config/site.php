@@ -84,7 +84,7 @@ return [
 
         // Alertes WhatsApp (destinataires à fournir par CSB ; l'envoi exige aussi WHATSAPP_TOKEN dans .env).
         'whatsapp.recipients' => '',
-        'whatsapp.events' => "demandes\ncommandes\ntickets",
+        'whatsapp.events' => "demandes\ncommandes\ntickets\ntemoignages",
 
         // Référencement (cahier §11.1)
         'seo.default_description' => 'Computer Service Barry (CSB) : vente de matériel informatique, réparation et maintenance, développement de logiciels et d\'applications web et mobiles.',

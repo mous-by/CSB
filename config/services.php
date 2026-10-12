@@ -46,4 +46,10 @@ return [
         'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com'),
     ],
 
+    // Conversion des vidéos de témoignages (MP4 lisible partout, image d'aperçu). Absent : vidéo publiée telle quelle.
+    'ffmpeg' => [
+        'ffmpeg' => env('FFMPEG_BINARY', 'ffmpeg'),
+        'ffprobe' => env('FFPROBE_BINARY', 'ffprobe'),
+    ],
+
 ];

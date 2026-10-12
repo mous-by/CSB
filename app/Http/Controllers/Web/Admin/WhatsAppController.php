@@ -16,7 +16,7 @@ use Throwable;
 /** Alertes WhatsApp : état de la configuration (.env), numéros à prévenir, événements, message de test, échecs récents. */
 class WhatsAppController extends Controller
 {
-    public const EVENTS = ['demandes' => 'Nouvelle demande (contact, devis, démonstration, disponibilité)', 'commandes' => 'Nouvelle commande de la boutique', 'tickets' => 'Nouveau ticket d\'assistance'];
+    public const EVENTS = ['demandes' => 'Nouvelle demande (contact, devis, démonstration, disponibilité)', 'commandes' => 'Nouvelle commande de la boutique', 'tickets' => 'Nouveau ticket d\'assistance', 'temoignages' => 'Nouveau témoignage envoyé par un client'];
 
     public function edit(WhatsAppNotifier $notifier, SiteSettings $settings): View
     {

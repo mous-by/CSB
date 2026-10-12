@@ -14,6 +14,7 @@ use App\Models\Logiciel;
 use App\Models\Materiel;
 use App\Models\Media;
 use App\Models\Realisation;
+use App\Models\Temoignage;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Backup\DatabaseBackup;
@@ -72,6 +73,7 @@ class RealDashboardData
         return array_filter([
             'demandes' => $user->can('demandes.view') ? Demande::where('status', DemandeStatus::Nouvelle->value)->count() : 0,
             'commandes' => $user->can('boutique.view') ? Commande::where('status', CommandeStatus::Nouvelle->value)->count() : 0,
+            'temoignages' => $user->can('temoignages.update') ? Temoignage::where('source', 'client')->where('is_published', false)->count() : 0,
             'tickets' => $user->can('tickets.view') ? Ticket::open()->where('awaiting_team', true)->count() : 0,
         ]);
     }
@@ -100,6 +102,13 @@ class RealDashboardData
             $new = Commande::where('status', CommandeStatus::Nouvelle->value)->count();
             if ($new > 0) {
                 $items[] = ['icon' => 'bx-cart', 'class' => 'text-danger', 'text' => "{$new} nouvelle(s) commande(s) à confirmer.", 'link' => route('commandes.index')];
+            }
+        }
+
+        if ($user->can('temoignages.update') && Route::has('temoignages.index')) {
+            $pending = Temoignage::where('source', 'client')->where('is_published', false)->count();
+            if ($pending > 0) {
+                $items[] = ['icon' => 'bx-video', 'class' => 'text-warning', 'text' => "{$pending} témoignage(s) de client à valider.", 'link' => route('temoignages.index')];
             }
         }
 
