@@ -12,6 +12,8 @@ enum RoleName: string
     case Administrateur = 'administrateur';
     case Gestionnaire = 'gestionnaire';
     case Commercial = 'commercial';
+    // Partenaire de diffusion sur les réseaux sociaux (demande de CSB, 2026-10-12) : son espace, son kit, des actualités.
+    case Communication = 'communication';
 
     public function label(): string
     {
@@ -20,6 +22,7 @@ enum RoleName: string
             self::Administrateur => 'Administrateur',
             self::Gestionnaire => 'Gestionnaire de contenu',
             self::Commercial => 'Commercial',
+            self::Communication => 'Communication / réseaux sociaux',
         };
     }
 

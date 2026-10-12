@@ -19,14 +19,15 @@
             'materiels' => 'Contenus du site', 'realisations' => 'Contenus du site', 'articles' => 'Contenus du site',
             'temoignages' => 'Contenus du site', 'medias' => 'Contenus du site', 'synchro' => 'Contenus du site',
             'demandes' => 'Commercial', 'abonnes' => 'Commercial', 'clients' => 'Commercial',
-            'tickets' => 'Commercial', 'commandes' => 'Commercial',
+            'tickets' => 'Commercial', 'commandes' => 'Commercial', 'partenaires' => 'Commercial',
+            'partenaire' => 'Réseaux sociaux', 'kit' => 'Réseaux sociaux',
             'users' => 'Administration',
         ];
         $groupIcons = ['Contenus du site' => 'bx bx-globe', 'Commercial' => 'bx bx-briefcase', 'Administration' => 'bx bx-buildings'];
         $groups = $navigation
             ->reject(fn ($item) => ($item['position'] ?? 'main') === 'bottom')
             ->groupBy(fn ($item) => $groupOf[explode('.', $item['route'])[0]] ?? 'Général')
-            ->sortBy(fn ($items, $name) => array_search($name, ['Général', 'Commercial', 'Contenus du site', 'Administration']) ?: 0);
+            ->sortBy(fn ($items, $name) => array_search($name, ['Général', 'Réseaux sociaux', 'Commercial', 'Contenus du site', 'Administration']) ?: 0);
         $badges = $sidebarBadges ?? [];
         $plannedModules = collect($plannedModules ?? [])->all();
         $plannedActive = collect($plannedModules)->keys()->contains(fn ($key) => request()->is('modules/'.$key));

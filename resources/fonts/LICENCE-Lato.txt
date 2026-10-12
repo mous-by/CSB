@@ -1,0 +1,4 @@
+Lato — polices de Łukasz Dziedzic (tyPoland), sous licence SIL Open Font License 1.1 (OFL).
+Utilisées pour générer les visuels du kit de publication (App\Services\Partenaires\KitImageService).
+Texte complet de la licence : OFL-Lato.txt (même dossier). La licence autorise l'usage, la copie et la redistribution
+des polices avec un logiciel, sans les vendre seules.

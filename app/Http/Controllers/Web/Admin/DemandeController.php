@@ -40,7 +40,7 @@ class DemandeController extends Controller
         Gate::authorize('view', $demande);
 
         return view('demandes.show', [
-            'demande' => $demande->load(['notes.author', 'assignee', 'subjectModel']),
+            'demande' => $demande->load(['notes.author', 'assignee', 'subjectModel', 'partenaire']),
             'history' => ActivityLog::where('subject_type', $demande->getMorphClass())->where('subject_id', $demande->id)->latest('id')->get(),
             'assignees' => User::query()->active()->whereHas('roles', fn ($q) => $q->whereIn('name', [RoleName::Commercial->value, RoleName::Administrateur->value]))->orderBy('name')->get(),
         ]);

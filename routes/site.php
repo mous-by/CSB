@@ -32,6 +32,7 @@ Route::name('site.')->group(function () {
     Route::patch('/panier/{materiel}', [BoutiqueController::class, 'update'])->middleware('throttle:60,1')->name('panier.update');
     Route::delete('/panier/{materiel}', [BoutiqueController::class, 'remove'])->middleware('throttle:60,1')->name('panier.remove');
     Route::get('/commande', [BoutiqueController::class, 'checkout'])->name('commande');
+    Route::post('/commande/code-promo', [BoutiqueController::class, 'promo'])->middleware('throttle:20,1')->name('commande.promo');
     Route::post('/commande', [BoutiqueController::class, 'store'])->middleware('throttle:demandes')->name('commande.store');
     Route::get('/commande/{number}/{token}', [BoutiqueController::class, 'suivi'])->where('token', '[A-Za-z0-9]{48}')->name('commande.suivi');
     // Témoignages (vidéo et écrit) ; envoi d'une vidéo par morceaux de 1 Mo (300 Mo au plus).

@@ -11,9 +11,11 @@ use App\Models\Client;
 use App\Models\Commande;
 use App\Models\CommandeLigne;
 use App\Models\Materiel;
+use App\Models\Partenaire;
 use App\Models\User;
 use App\Services\Audit\ActivityLogger;
 use App\Services\Numbering\SequenceService;
+use App\Services\Partenaires\CommissionService;
 use App\Services\WhatsApp\WhatsAppNotifier;
 use App\Support\PhoneNumber;
 use App\Support\SiteSettings;
@@ -42,21 +44,27 @@ class CommandeService
      * @param  array{name: string, organization?: ?string, email?: ?string, phone: string, delivery_method: string, address?: ?string, city?: ?string, payment_method: string, notes?: ?string}  $data
      * @param  Collection<int, array{materiel: Materiel, quantity: int, unit_price: int, normal_price: int, line_total: int}>  $lines
      */
-    public function place(array $data, Collection $lines, ?Client $client, ?string $ip): Commande
+    public function place(array $data, Collection $lines, ?Client $client, ?string $ip, ?Partenaire $partenaire = null, bool $promo = false): Commande
     {
         if ($lines->isEmpty()) {
             throw new RuntimeException('Le panier est vide.');
         }
 
         // Audit : une seule entrée explicite par action (« commande passée », « statut »), pas la journalisation automatique.
-        $commande = DB::transaction(fn () => Commande::withoutActivityLog(fn () => CommandeLigne::withoutActivityLog(function () use ($data, $lines, $client, $ip) {
+        // Code promo d'un partenaire : remise sur le sous-total ; la commission se calcule sur le total payé.
+        $subtotal = (int) $lines->sum('line_total');
+        $discount = $promo && $partenaire ? (int) round($subtotal * $partenaire->promo_discount / 100) : 0;
+
+        $commande = DB::transaction(fn () => Commande::withoutActivityLog(fn () => CommandeLigne::withoutActivityLog(function () use ($data, $lines, $client, $ip, $partenaire, $promo, $subtotal, $discount) {
             $commande = Commande::create([
                 'number' => $this->sequences->next('CMD'), 'client_id' => $client?->id, 'status' => CommandeStatus::Nouvelle,
                 'name' => $data['name'], 'organization' => $data['organization'] ?? null, 'email' => isset($data['email']) ? Str::lower($data['email']) : null,
                 'phone' => PhoneNumber::normalize($data['phone']) ?? $data['phone'],
                 'delivery_method' => DeliveryMethod::from($data['delivery_method']), 'address' => $data['address'] ?? null, 'city' => $data['city'] ?? null,
                 'payment_method' => PaymentMethod::from($data['payment_method']), 'notes' => $data['notes'] ?? null,
-                'total' => $lines->sum('line_total'), 'ip_address' => $ip, 'access_token' => Str::random(48),
+                'subtotal' => $subtotal, 'discount_amount' => $discount, 'promo_code' => $promo ? $partenaire?->promo_code : null,
+                'total' => $subtotal - $discount, 'partenaire_id' => $partenaire?->id ?? $client?->partenaire_id,
+                'ip_address' => $ip, 'access_token' => Str::random(48),
             ]);
             foreach ($lines as $line) {
                 $commande->lignes()->create([
@@ -102,6 +110,12 @@ class CommandeService
         }
 
         Commande::withoutActivityLog(fn () => $commande->update($changes));
+        // Commission du partenaire : due quand la commande est payée (ou livrée), annulée avec la commande.
+        if (in_array($status, [CommandeStatus::Payee, CommandeStatus::Livree], true)) {
+            app(CommissionService::class)->forCommande($commande->fresh('partenaire'), $user);
+        } elseif ($status === CommandeStatus::Annulee) {
+            app(CommissionService::class)->cancelFor($commande, $user, 'Commande annulée');
+        }
         if ($old !== $status) {
             $this->logger->log('commandes.status_changed', 'commandes', "Commande {$commande->number} : {$old->label()} → {$status->label()}", $commande, ['status' => $old->value], ['status' => $status->value], $user);
             $this->notifyClient($commande->fresh('lignes'));

@@ -20,6 +20,7 @@ return [
     'roles' => [
         'administrateur' => ['defaults' => ['view', 'upload', 'update', 'delete'], 'optional' => []],
         'gestionnaire' => ['defaults' => ['view', 'upload', 'update'], 'optional' => ['delete']],
+        'communication' => ['defaults' => ['view', 'upload'], 'optional' => ['update']],
     ],
 
     'navigation' => [

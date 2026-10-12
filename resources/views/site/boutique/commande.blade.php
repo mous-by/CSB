@@ -47,6 +47,14 @@
                                     @error('payment_method')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                 </fieldset>
                             </div>
+                            <div class="col-md-7" data-promo-box data-url="{{ route('site.commande.promo') }}">
+                                <label for="f-promo_code" class="form-label">Code promo</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control text-uppercase @error('promo_code') is-invalid @enderror" id="f-promo_code" name="promo_code" value="{{ old('promo_code') }}" maxlength="30" autocomplete="off" placeholder="Ex. CODE10">
+                                    <button type="button" class="btn btn-outline-primary" data-promo-apply>Appliquer</button>
+                                </div>
+                                <div class="small mt-1" data-promo-message>@error('promo_code'){{ $message }}@enderror</div>
+                            </div>
                             <div class="col-12">@include('site.demandes._field', ['name' => 'notes', 'label' => 'Remarques', 'type' => 'textarea', 'max' => 1000, 'rows' => 3, 'placeholder' => 'Horaires de passage, précisions…'])</div>
                             @include('site.demandes._footer', ['submit' => 'Valider ma commande'])
                         </div>
@@ -63,9 +71,13 @@
                                 </li>
                             @endforeach
                         </ul>
+                        <div class="d-flex justify-content-between text-success" data-promo-discount-row hidden>
+                            <span>Remise (code promo)</span>
+                            <strong data-promo-discount></strong>
+                        </div>
                         <div class="d-flex justify-content-between align-items-baseline">
                             <span>Total</span>
-                            <strong class="h4 mb-0 text-blue">{{ \App\Models\Materiel::money($total) }}</strong>
+                            <strong class="h4 mb-0 text-blue" data-promo-total>{{ \App\Models\Materiel::money($total) }}</strong>
                         </div>
                         <a href="{{ route('site.panier') }}" class="small d-inline-block mt-3">Modifier le panier</a>
                     </div>

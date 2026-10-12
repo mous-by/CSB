@@ -21,7 +21,7 @@ class DashboardAndModulesTest extends TestCase
         // Liste « à venir » de test : la vraie se vide à mesure que les modules sont livrés.
         config(['planned_modules' => [
             'inventaires' => ['label' => 'Inventaires de test', 'icon' => 'bx bx-clipboard', 'order' => 300, 'roles' => ['commercial'], 'summary' => 'Module prévu.', 'cahier' => '§15.3', 'open' => ['Point ouvert de test.']],
-            'partenaires' => ['label' => 'Partenaires de test', 'icon' => 'bx bx-group', 'order' => 310, 'roles' => [], 'summary' => 'Autre module prévu.', 'cahier' => '§15.3', 'open' => []],
+            'fidelite' => ['label' => 'Fidélité de test', 'icon' => 'bx bx-group', 'order' => 310, 'roles' => [], 'summary' => 'Autre module prévu.', 'cahier' => '§15.3', 'open' => []],
         ]]);
     }
 
@@ -54,7 +54,7 @@ class DashboardAndModulesTest extends TestCase
         }
 
         // Le commercial ne voit que les évolutions qui le concernent.
-        $this->actingAs(User::factory()->commercial()->create())->get('/admin')->assertSee('Inventaires de test')->assertDontSee('Partenaires de test');
+        $this->actingAs(User::factory()->commercial()->create())->get('/admin')->assertSee('Inventaires de test')->assertDontSee('Fidélité de test');
     }
 
     public function test_a_planned_module_page_is_a_sheet_with_open_points_and_no_data(): void

@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureClientIsActive;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureSuperadminsExist;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\TrackPartnerLink;
 use App\Models\Redirection;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Lien d'un partenaire (?ref=…) : cookie d'attribution et visite comptée (App\Services\Partenaires\PartnerTracker).
+        $middleware->web(append: [TrackPartnerLink::class]);
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'client.active' => EnsureClientIsActive::class,

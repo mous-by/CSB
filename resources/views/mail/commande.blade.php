@@ -17,6 +17,9 @@
                         <td align="right" style="white-space:nowrap">{{ \App\Models\Materiel::money($ligne->line_total) }}</td>
                     </tr>
                 @endforeach
+                @if ($commande->discount_amount > 0)
+                    <tr><td>Remise (code {{ $commande->promo_code }})</td><td align="right" style="white-space:nowrap">− {{ \App\Models\Materiel::money($commande->discount_amount) }}</td></tr>
+                @endif
                 <tr><td style="font-weight:bold">Total</td><td align="right" style="font-weight:bold;white-space:nowrap">{{ $commande->totalForDisplay() }}</td></tr>
             </table>
             <p style="font-size:14px;color:#55607a">{{ $commande->delivery_method->label() }}@if ($commande->address) — {{ $commande->address }}@endif · Paiement : {{ $commande->payment_method->label() }}</p>

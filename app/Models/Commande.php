@@ -16,8 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /** Commande de la boutique (App\Services\Boutique\CommandeService). */
 #[Fillable([
     'number', 'client_id', 'status', 'name', 'organization', 'email', 'phone', 'delivery_method', 'address', 'city',
-    'payment_method', 'payment_reference', 'total', 'notes', 'cancel_reason', 'handled_by', 'confirmed_at', 'paid_at',
-    'delivered_at', 'ip_address', 'access_token',
+    'payment_method', 'payment_reference', 'subtotal', 'promo_code', 'discount_amount', 'total', 'notes', 'cancel_reason', 'handled_by', 'confirmed_at', 'paid_at',
+    'delivered_at', 'ip_address', 'access_token', 'partenaire_id',
 ])]
 class Commande extends Model
 {
@@ -27,7 +27,7 @@ class Commande extends Model
     {
         return [
             'status' => CommandeStatus::class, 'delivery_method' => DeliveryMethod::class, 'payment_method' => PaymentMethod::class,
-            'total' => 'integer', 'confirmed_at' => 'datetime', 'paid_at' => 'datetime', 'delivered_at' => 'datetime',
+            'total' => 'integer', 'subtotal' => 'integer', 'discount_amount' => 'integer', 'confirmed_at' => 'datetime', 'paid_at' => 'datetime', 'delivered_at' => 'datetime',
         ];
     }
 
@@ -39,6 +39,11 @@ class Commande extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class)->withTrashed();
+    }
+
+    public function partenaire(): BelongsTo
+    {
+        return $this->belongsTo(Partenaire::class)->withTrashed();
     }
 
     public function handler(): BelongsTo

@@ -26,6 +26,9 @@
                                 <strong class="text-nowrap">{{ \App\Models\Materiel::money($ligne->line_total) }}</strong>
                             </div>
                         @endforeach
+                        @if ($commande->discount_amount > 0)
+                            <div class="d-flex justify-content-between mt-3 text-success"><span>Remise (code {{ $commande->promo_code }})</span><strong>− {{ \App\Models\Materiel::money($commande->discount_amount) }}</strong></div>
+                        @endif
                         <div class="d-flex justify-content-between align-items-baseline mt-3">
                             <span>Total</span><strong class="h4 mb-0 text-blue">{{ $commande->totalForDisplay() }}</strong>
                         </div>

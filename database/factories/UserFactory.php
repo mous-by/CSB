@@ -59,6 +59,11 @@ class UserFactory extends Factory
         return $this->withRole(RoleName::Commercial);
     }
 
+    public function communication(): static
+    {
+        return $this->withRole(RoleName::Communication);
+    }
+
     public function inactive(): static
     {
         return $this->state(fn () => ['is_active' => false]);

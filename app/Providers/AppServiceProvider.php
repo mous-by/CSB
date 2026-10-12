@@ -12,11 +12,13 @@ use App\Models\Client;
 use App\Models\ClientDocument;
 use App\Models\Commande;
 use App\Models\CommandeLigne;
+use App\Models\Commission;
 use App\Models\Demande;
 use App\Models\DemandeNote;
 use App\Models\Logiciel;
 use App\Models\Materiel;
 use App\Models\Media;
+use App\Models\Partenaire;
 use App\Models\Permission;
 use App\Models\Prestation;
 use App\Models\Realisation;
@@ -126,6 +128,8 @@ class AppServiceProvider extends ServiceProvider
             'client' => Client::class,
             'client_document' => ClientDocument::class,
             'commande' => Commande::class,
+            'commission' => Commission::class,
+            'partenaire' => Partenaire::class,
             'commande_ligne' => CommandeLigne::class,
             'logiciel' => Logiciel::class,
             'article' => Article::class,

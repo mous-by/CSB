@@ -3,21 +3,25 @@
 namespace App\Services\Dashboard;
 
 use App\Enums\CommandeStatus;
+use App\Enums\CommissionStatus;
 use App\Enums\DemandeStatus;
 use App\Enums\DemandeType;
 use App\Enums\RoleName;
 use App\Models\ActivityLog;
 use App\Models\Article;
 use App\Models\Commande;
+use App\Models\Commission;
 use App\Models\Demande;
 use App\Models\Logiciel;
 use App\Models\Materiel;
 use App\Models\Media;
+use App\Models\Partenaire;
 use App\Models\Realisation;
 use App\Models\Temoignage;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Backup\DatabaseBackup;
+use App\Services\Partenaires\PartnerStats;
 use App\Support\SiteSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -49,6 +53,7 @@ class RealDashboardData
         if ($user->can('demandes.view')) {
             $this->demandes($user, $dashboard);
         }
+        $this->partenaires($user, $dashboard);
         $this->contenus($user, $dashboard);
         if ($user->can('users.view')) {
             $this->comptes($user, $dashboard);
@@ -234,6 +239,27 @@ class RealDashboardData
         $dashboard['sections'][] = ['title' => 'Contenus du site', 'icon' => 'bx bx-globe', 'cards' => $cards, 'tables' => $tables];
     }
 
+    /** Partenaires : ses propres résultats (rôle Communication) et commissions à payer (équipe). */
+    private function partenaires(User $user, array &$dashboard): void
+    {
+        $own = $user->can('partenaires.dashboard') ? Partenaire::where('user_id', $user->id)->first() : null;
+        if ($own) {
+            $s = app(PartnerStats::class)->for($own);
+            $dashboard['sections'][] = ['title' => 'Mes résultats de partenaire', 'icon' => 'bx bx-trending-up', 'tables' => [], 'cards' => [
+                $this->card('Visites (30 jours)', (string) $s['visits_period'], 'venues de votre lien', 'bx bx-mouse', 'primary'),
+                $this->card('Demandes', (string) $s['demandes'], 'devis, contacts, démos', 'bx bx-envelope', 'info'),
+                $this->card('Ventes', (string) $s['ventes'], Materiel::money($s['chiffre']), 'bx bx-cart', 'success'),
+                $this->card('Commissions à recevoir', Materiel::money($s['a_payer']), 'payées : '.Materiel::money($s['payees']), 'bx bx-wallet', 'warning', true),
+            ]];
+        }
+        if ($user->can('partenaires.commissions')) {
+            $due = (int) Commission::where('status', CommissionStatus::APayer->value)->sum('amount');
+            if ($due > 0) {
+                $dashboard['tasks'][] = $this->task('Commissions à payer', Materiel::money($due).' aux partenaires', Commission::where('status', CommissionStatus::APayer->value)->count(), 'bx bx-wallet', 'warning', 'partenaires.index');
+            }
+        }
+    }
+
     /** Comptes et accès (users.view) : périmètre visible de l'acteur (User::visibleTo). */
     private function comptes(User $user, array &$dashboard): void
     {
@@ -362,6 +388,8 @@ class RealDashboardData
     private function quick(User $user): array
     {
         $candidates = [
+            ['partenaire.espace', 'partenaires.dashboard', 'Mon espace partenaire', 'bx bx-trending-up'],
+            ['kit.index', 'partenaires.kit', 'Kit de publication', 'bx bx-share'],
             ['demandes.index', 'demandes.view', 'Demandes', 'bx bx-envelope'],
             ['logiciels.create', 'logiciels.create', 'Nouveau logiciel', 'bx bx-code-block'],
             ['materiels.create', 'materiels.create', 'Nouveau matériel', 'bx bx-laptop'],

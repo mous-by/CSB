@@ -84,6 +84,14 @@
                 'Synchronisation du stock → « Modèle Excel », complétez les quantités (et les prix si besoin), puis « Synchroniser ». Quantité 0 : le produit passe « Indisponible » et ne peut plus être commandé.',
                 'Pour une mise à jour automatique, l\'administrateur crée un jeton d\'API (affiché une seule fois) et le donne à votre logiciel de stock. Chaque synchronisation apparaît dans le journal, avec les références inconnues.',
             ]],
+            ['bx bx-share-alt', 'Partenaires et commissions', [
+                'Partenaires → « Ajouter » : nom, code du lien (son lien devient l\'adresse du site suivie de ?ref=code), taux de commission en % pour le matériel, les logiciels et le sur mesure, durée d\'attribution (30 jours par défaut), code promo facultatif (remise en % et date de fin).',
+                'Pour qu\'il ait son espace : créez-lui un compte au rôle « Communication / réseaux sociaux » (Paramètres → Utilisateurs), puis choisissez ce compte sur sa fiche. Il voit ses résultats, ses commissions et le kit de publication ; il peut rédiger des actualités (publier reste une option à lui accorder).',
+                'Une visite, une demande, une inscription ou une commande faite après un clic sur son lien (ou avec son code promo) lui est attribuée. Une commande de la boutique crée sa commission automatiquement quand vous la passez « Payée » ; une annulation l\'annule.',
+                'Vente de logiciel ou projet sur mesure : sur la fiche de la demande venue de lui (encadré « Venue d\'un partenaire »), ou sur sa fiche avec « Enregistrer une vente », saisissez le montant encaissé : la commission est calculée avec son taux.',
+                'Pour payer : cochez les commissions « À payer » sur sa fiche, indiquez la référence du transfert, puis « Marquer payées ».',
+                'Kit de publication : pour chaque produit, logiciel, réalisation ou actualité, des textes prêts à copier (Facebook, Instagram, TikTok, WhatsApp, LinkedIn) avec son lien et son code, et des visuels prêts à poster (carré et story) générés automatiquement.',
+            ]],
             ['bx bx-video', 'Témoignages en vidéo', [
                 'Témoignages → « Ajouter » : nom, fonction, organisation, note, texte, photo, et une vidéo (envoyée depuis votre ordinateur ou téléphone, 300 Mo au plus) ou un lien YouTube / Facebook / TikTok.',
                 'La vidéo envoyée est convertie en quelques minutes (format lisible sur tous les téléphones, image d\'aperçu, durée) : « Préparation… » s\'affiche en attendant.',

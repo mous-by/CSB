@@ -49,6 +49,9 @@
                                         <td class="text-end text-nowrap">{{ \App\Models\Materiel::money($ligne->line_total) }}</td>
                                     </tr>
                                 @endforeach
+                                @if ($commande->discount_amount > 0)
+                                    <tr class="text-success"><td colspan="3" class="text-end">Remise (code {{ $commande->promo_code }})</td><td class="text-end text-nowrap">− {{ \App\Models\Materiel::money($commande->discount_amount) }}</td></tr>
+                                @endif
                                 <tr class="fw-bold"><td colspan="3" class="text-end">TOTAL</td><td class="text-end text-nowrap">{{ $commande->totalForDisplay() }}</td></tr>
                             </tbody>
                         </table>
@@ -62,6 +65,9 @@
                                     <dt>Organisation</dt><dd>{{ $commande->organization ?? '—' }}</dd>
                                     <dt>Téléphone</dt><dd>{{ $commande->phone }}</dd>
                                     <dt>E-mail</dt><dd class="text-break">{{ $commande->email ?? '—' }}</dd>
+                                    @if ($commande->partenaire)
+                                        <dt>Partenaire</dt><dd>@if (Route::has('partenaires.show') && auth()->user()->can('partenaires.view'))<a href="{{ route('partenaires.show', $commande->partenaire) }}">{{ $commande->partenaire->name }}</a>@else{{ $commande->partenaire->name }}@endif</dd>
+                                    @endif
                                     <dt>Compte client</dt><dd>@if ($commande->client && Route::has('clients.show') && auth()->user()->can('clients.view'))<a href="{{ route('clients.show', $commande->client) }}">{{ $commande->client->name }}</a>@else{{ $commande->client?->name ?? 'Sans compte' }}@endif</dd>
                                 </dl>
                             </div>

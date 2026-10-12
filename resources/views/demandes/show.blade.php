@@ -162,6 +162,33 @@
                 </div>
             @endcan
 
+            @if ($demande->partenaire)
+                <div class="card">
+                    <div class="card-header card-header-brand"><h6 class="mb-0 text-white"><i class='bx bx-share-alt me-2'></i>VENUE D'UN PARTENAIRE</h6></div>
+                    <div class="card-body small">
+                        <p class="mb-2">Cette demande vient de <strong>@if (auth()->user()->can('partenaires.view'))<a href="{{ route('partenaires.show', $demande->partenaire) }}">{{ $demande->partenaire->name }}</a>@else{{ $demande->partenaire->name }}@endif</strong> (son lien ou son code). Une vente conclue lui rapporte une commission.</p>
+                        @can('partenaires.commissions')
+                            <form method="POST" action="{{ route('partenaires.commissions.store', $demande->partenaire) }}" class="nv-panel">
+                                @csrf
+                                <input type="hidden" name="demande_id" value="{{ $demande->id }}">
+                                <input type="hidden" name="label" value="{{ \Illuminate\Support\Str::limit(($demande->subject_label ?? $demande->subject ?? $demande->type->label()).' — '.$demande->name, 200, '') }}">
+                                <label class="form-label fw-semibold" for="sale-kind">Vente conclue</label>
+                                <select class="form-select form-select-sm mb-2" id="sale-kind" name="kind">
+                                    @foreach (\App\Enums\CommissionKind::cases() as $kind)
+                                        <option value="{{ $kind->value }}" @selected($demande->subject_type === 'logiciel' ? $kind === \App\Enums\CommissionKind::Logiciel : ($demande->subject_type === 'materiel' ? $kind === \App\Enums\CommissionKind::Materiel : $kind === \App\Enums\CommissionKind::SurMesure))>{{ $kind->label() }} ({{ rtrim(rtrim(number_format($demande->partenaire->rateFor($kind), 2, ',', ''), '0'), ',') }} %)</option>
+                                    @endforeach
+                                </select>
+                                <div class="input-group input-group-sm mb-2">
+                                    <input type="number" min="1" class="form-control" name="base_amount" placeholder="Montant encaissé" required aria-label="Montant encaissé">
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm w-100">Enregistrer la commission</button>
+                            </form>
+                        @endcan
+                    </div>
+                </div>
+            @endif
+
             <div class="card">
                 <div class="card-header card-header-brand">
                     <h6 class="mb-0 text-white"><i class='bx bx-history me-2'></i>HISTORIQUE</h6>

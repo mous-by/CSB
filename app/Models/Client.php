@@ -18,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
  * Compte d'un client de CSB (espace client, garde `client`) : suivi de ses demandes, commandes et tickets, documents
  * mis à sa disposition. Jamais de rôle ni de permission : il ne voit que ce qui lui appartient.
  */
-#[Fillable(['name', 'organization', 'email', 'email_verified_at', 'phone', 'password', 'is_active', 'address', 'city', 'last_login_at'])]
+#[Fillable(['name', 'organization', 'email', 'email_verified_at', 'phone', 'password', 'is_active', 'address', 'city', 'last_login_at', 'partenaire_id'])]
 #[Hidden(['password', 'remember_token'])]
 class Client extends Authenticatable
 {

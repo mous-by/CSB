@@ -941,6 +941,34 @@
         });
     }
 
+    /* Code promo de la commande : vérifié en AJAX, remise et nouveau total affichés avant validation. */
+    function initPromoCode() {
+        var box = document.querySelector('[data-promo-box]');
+        if (!box || !window.fetch) return;
+        var input = box.querySelector('input');
+        var message = box.querySelector('[data-promo-message]');
+        var row = document.querySelector('[data-promo-discount-row]');
+        var discount = document.querySelector('[data-promo-discount]');
+        var total = document.querySelector('[data-promo-total]');
+        var initialTotal = total ? total.textContent : '';
+        var token = box.closest('form').querySelector('input[name=_token]').value;
+        function apply() {
+            var code = input.value.trim();
+            if (!code) { if (row) row.hidden = true; if (total) total.textContent = initialTotal; message.textContent = ''; return; }
+            fetch(box.dataset.url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': token }, body: JSON.stringify({ code: code }) })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    message.textContent = res.message || '';
+                    message.className = 'small mt-1 ' + (res.valid ? 'text-success' : 'text-danger');
+                    if (row) row.hidden = !res.valid;
+                    if (res.valid) { discount.textContent = '− ' + res.discount; total.textContent = res.total; } else if (total) { total.textContent = initialTotal; }
+                });
+        }
+        box.querySelector('[data-promo-apply]').addEventListener('click', apply);
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+        if (input.value) apply();
+    }
+
     /* ——— Démarrage ——— */
     document.addEventListener('DOMContentLoaded', function () {
         initScroll();
@@ -963,6 +991,7 @@
         initCart();
         initCheckout();
         initVideoLightbox();
+        initPromoCode();
     });
 
     CSB.initReveal = initReveal;

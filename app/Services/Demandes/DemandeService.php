@@ -9,6 +9,7 @@ use App\Models\Demande;
 use App\Models\DemandeNote;
 use App\Models\User;
 use App\Services\Audit\ActivityLogger;
+use App\Services\Partenaires\PartnerTracker;
 use App\Services\WhatsApp\WhatsAppNotifier;
 use App\Support\SiteSettings;
 use Illuminate\Database\Eloquent\Model;
@@ -67,6 +68,8 @@ class DemandeService
                     'user_agent' => Str::limit((string) $request->userAgent(), 500, ''),
                     // Client connecté à son espace : la demande y apparaît immédiatement.
                     'client_id' => $request->user('client')?->id,
+                    // Visiteur venu par le lien d'un partenaire (cookie) ou client rattaché à un partenaire.
+                    'partenaire_id' => app(PartnerTracker::class)->current($request)?->id ?? $request->user('client')?->partenaire_id,
                 ]);
 
                 $this->logger->log('demandes.received', 'demandes', "Demande reçue — {$type->label()} de {$demande->name}", $demande);

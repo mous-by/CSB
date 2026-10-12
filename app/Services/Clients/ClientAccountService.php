@@ -4,6 +4,7 @@ namespace App\Services\Clients;
 
 use App\Models\Client;
 use App\Models\Demande;
+use App\Models\Partenaire;
 use App\Notifications\ClientVerifyEmail;
 use App\Services\Audit\ActivityLogger;
 use App\Support\PhoneNumber;
@@ -25,12 +26,13 @@ class ClientAccountService
     public function __construct(private readonly ActivityLogger $logger) {}
 
     /** @param array{name: string, organization?: ?string, email: string, phone?: ?string, password: string} $data */
-    public function register(array $data): Client
+    public function register(array $data, ?Partenaire $partenaire = null): Client
     {
-        $client = DB::transaction(function () use ($data) {
+        $client = DB::transaction(function () use ($data, $partenaire) {
             $client = Client::create([
                 'name' => $data['name'], 'organization' => $data['organization'] ?? null, 'email' => $data['email'],
                 'phone' => PhoneNumber::normalize($data['phone'] ?? null), 'password' => $data['password'],
+                'partenaire_id' => $partenaire?->id,
             ]);
             $this->logger->log('clients.registered', 'clients', "Inscription à l'espace client — {$client->name}", $client);
 

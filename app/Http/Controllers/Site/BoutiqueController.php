@@ -9,6 +9,7 @@ use App\Models\Commande;
 use App\Models\Materiel;
 use App\Services\Boutique\CartService;
 use App\Services\Boutique\CommandeService;
+use App\Services\Partenaires\PartnerTracker;
 use App\Support\PhoneNumber;
 use App\Support\Seo;
 use App\Support\SpamGuard;
@@ -24,7 +25,23 @@ use Illuminate\View\View;
  */
 class BoutiqueController extends Controller
 {
-    public function __construct(private readonly CartService $cart, private readonly CommandeService $commandes) {}
+    public function __construct(private readonly CartService $cart, private readonly CommandeService $commandes, private readonly PartnerTracker $tracker) {}
+
+    /** Vérification d'un code promo avant la commande (AJAX) : remise et nouveau total. */
+    public function promo(Request $request): JsonResponse
+    {
+        $partenaire = $this->tracker->byPromoCode((string) $request->input('code'));
+        if (! $partenaire) {
+            return response()->json(['valid' => false, 'message' => 'Ce code promo n\'est pas valable (ou a expiré).'], 422);
+        }
+        $subtotal = $this->cart->total();
+        $discount = (int) round($subtotal * $partenaire->promo_discount / 100);
+
+        return response()->json([
+            'valid' => true, 'message' => 'Code '.$partenaire->promo_code.' appliqué : -'.rtrim(rtrim(number_format($partenaire->promo_discount, 2, ',', ''), '0'), ',').' %.',
+            'discount' => Materiel::money($discount), 'total' => Materiel::money($subtotal - $discount),
+        ]);
+    }
 
     public function panier(): View
     {
@@ -80,9 +97,10 @@ class BoutiqueController extends Controller
             'city' => ['nullable', 'string', 'max:100'],
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'promo_code' => ['nullable', 'string', 'max:30', fn ($a, $v, $fail) => filled($v) && ! $this->tracker->byPromoCode($v) ? $fail('Ce code promo n\'est pas valable (ou a expiré).') : null],
             'consent' => ['accepted'],
         ], ['address.required_if' => 'Indiquez l\'adresse de livraison.', 'consent.accepted' => 'Merci d\'accepter l\'utilisation de vos informations pour traiter la commande.'], [
-            'name' => 'nom', 'organization' => 'entreprise', 'email' => 'e-mail', 'phone' => 'téléphone', 'delivery_method' => 'mode de réception',
+            'name' => 'nom', 'promo_code' => 'code promo', 'organization' => 'entreprise', 'email' => 'e-mail', 'phone' => 'téléphone', 'delivery_method' => 'mode de réception',
             'address' => 'adresse', 'city' => 'ville', 'payment_method' => 'moyen de paiement', 'notes' => 'remarques',
         ]);
 
@@ -97,7 +115,9 @@ class BoutiqueController extends Controller
             return redirect()->route('site.home');
         }
 
-        $commande = $this->commandes->place($data, $lines, $request->user('client'), $request->ip());
+        $promoPartner = $this->tracker->byPromoCode($data['promo_code'] ?? null);
+        $partenaire = $promoPartner ?? $this->tracker->current($request);
+        $commande = $this->commandes->place($data, $lines, $request->user('client'), $request->ip(), $partenaire, $promoPartner !== null);
         $this->cart->clear();
 
         return redirect()->route('site.commande.suivi', [$commande->number, $commande->access_token])->with('commande_placed', true);

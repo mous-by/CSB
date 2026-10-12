@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'type', 'status', 'name', 'organization', 'email', 'phone', 'subject', 'message', 'need_type', 'budget', 'deadline',
     'availability', 'subject_type', 'subject_id', 'subject_label', 'source_url', 'attachment_path', 'attachment_name',
-    'attachment_size', 'consent_at', 'ip_address', 'user_agent', 'assigned_to', 'client_id', 'closed_reason', 'status_changed_at',
+    'attachment_size', 'consent_at', 'ip_address', 'user_agent', 'assigned_to', 'client_id', 'partenaire_id', 'closed_reason', 'status_changed_at',
     'notified_at', 'notification_error',
 ])]
 class Demande extends Model
@@ -95,5 +95,10 @@ class Demande extends Model
     public function activityLabel(): string
     {
         return $this->reference().' — '.$this->name;
+    }
+
+    public function partenaire(): BelongsTo
+    {
+        return $this->belongsTo(Partenaire::class)->withTrashed();
     }
 }

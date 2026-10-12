@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Services\Clients\ClientAccountService;
+use App\Services\Partenaires\PartnerTracker;
 use App\Support\PhoneNumber;
 use App\Support\Seo;
 use Illuminate\Auth\Events\PasswordReset;
@@ -64,7 +65,7 @@ class AuthController extends Controller
         ], ['email.unique' => 'Un compte existe déjà avec cette adresse : connectez-vous ou utilisez « Mot de passe oublié ».', 'consent.accepted' => 'Merci d\'accepter la politique de confidentialité.'],
             ['name' => 'nom complet', 'organization' => 'organisation', 'email' => 'e-mail', 'phone' => 'téléphone', 'password' => 'mot de passe']);
 
-        $client = $this->accounts->register($data);
+        $client = $this->accounts->register($data, app(PartnerTracker::class)->current($request));
         Auth::guard('client')->login($client);
         $request->session()->regenerate();
 
