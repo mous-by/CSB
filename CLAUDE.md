@@ -269,6 +269,8 @@ Bleu `#103B8E`, orange `#F58220` (À CONFIRMER selon le logo), blanc, police Int
 ### Installation sur un serveur (Linux)
 
 1. PHP ≥ 8.3 (`pdo_mysql`, `mbstring`, `gd`, `fileinfo`, `zip`), Composer 2, MariaDB 10.4+ ou MySQL 8, domaine pointé sur `public/` (aucun accès web au reste du code), **HTTPS obligatoire** (cahier §10, §12).
+   - **Hébergement mutualisé LWS** (en ligne depuis le 2026-10-28, `~/htdocs/computerservicebarry.com`, à côté de KalanNet) : le dossier du domaine contient tout le code ; un `.htaccess` à la racine (hors Git) renvoie tout vers `public/` (`RewriteCond %{REQUEST_URI} !^/public/` puis `RewriteRule ^(.*)$ /public/$1 [L]`), d'où `RewriteRule ^ /index.php` (chemin absolu) dans `public/.htaccess`.
+   - La commande `php` de LWS suit la version PHP du domaine (panneau LWS, 8.5) ; le cron appelle `/usr/base/opt/php8.5/bin/php`. Les dépendances exigent PHP ≥ 8.4.1 (Symfony 8).
 2. `composer install --no-dev --optimize-autoloader`, `cp .env.example .env`, `php artisan key:generate`.
 3. `.env` : `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://…`, base, `SUPERADMIN_*` (mot de passe fort, temporaire hors `local`), `ADMIN_PATH`, SMTP, `SITE_NOTIFICATION_EMAIL`, `WHATSAPP_*`, `BACKUP_MYSQLDUMP`, `BACKUP_COPY_PATH`. Le cron `schedule:run` est obligatoire : il vide aussi la file d'attente (newsletter, alertes WhatsApp, conversion des vidéos). **ffmpeg** conseillé sur le serveur (`FFMPEG_BINARY`, `FFPROBE_BINARY`) pour convertir les vidéos de témoignages.
 4. `php artisan migrate --force && php artisan db:seed --force && php artisan storage:link`.
