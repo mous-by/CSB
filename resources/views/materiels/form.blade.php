@@ -21,6 +21,7 @@
         $v = fn (string $field, $default = null) => old($field, $materiel?->{$field} ?? $default);
         $condition = old('condition', $materiel?->condition->value ?? 'neuf');
         $availability = old('availability', $materiel?->availability->value ?? 'disponible');
+        $advisorUsages = (array) (old('advisor_usages', $materiel?->advisor_usages) ?? []);
         $specs = old('specs', collect($materiel?->specList() ?? [])->map(fn ($row) => ['label' => $row[0], 'value' => $row[1]])->all());
         $canPublish = auth()->user()->can('publish', \App\Models\Materiel::class);
         $selectedGallery = old('gallery') !== null ? \App\Models\Media::whereIn('id', old('gallery'))->get()->sortBy(fn ($m) => array_search($m->id, old('gallery'))) : ($materiel?->gallery ?? collect());
@@ -188,6 +189,30 @@
                         <label for="sort_order" class="form-label fw-semibold">Ordre d'affichage</label>
                         <input type="number" class="form-control @error('sort_order') is-invalid @enderror" id="sort_order" name="sort_order" min="0" max="9999" value="{{ $v('sort_order', 0) }}" required>
                         @include('admin._field-error', ['field' => 'sort_order'])
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header card-header-brand">
+                        <h6 class="mb-0 text-white"><i class='bx bx-compass me-2'></i>CONSEILLER D'ACHAT</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">Pour un ordinateur : cochez les usages qu'il couvre bien. Le conseiller du site le proposera aux visiteurs qui en ont besoin (rien de coché = jamais proposé).</p>
+                        @foreach (\App\Enums\AdvisorUsage::cases() as $usage)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="advisor_usages[]" value="{{ $usage->value }}" id="usage-{{ $usage->value }}" @checked(in_array($usage->value, $advisorUsages, true))>
+                                <label class="form-check-label" for="usage-{{ $usage->value }}">{{ $usage->label() }}</label>
+                            </div>
+                        @endforeach
+                        @include('admin._field-error', ['field' => 'advisor_usages'])
+                        <label for="advisor_form" class="form-label fw-semibold mt-3">Format</label>
+                        <select class="form-select @error('advisor_form') is-invalid @enderror" id="advisor_form" name="advisor_form">
+                            <option value="">— Non précisé —</option>
+                            @foreach (\App\Enums\AdvisorForm::cases() as $case)
+                                <option value="{{ $case->value }}" @selected(old('advisor_form', $materiel?->advisor_form?->value) === $case->value)>{{ $case->label() }}</option>
+                            @endforeach
+                        </select>
+                        @include('admin._field-error', ['field' => 'advisor_form'])
                     </div>
                 </div>
 

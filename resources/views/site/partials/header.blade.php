@@ -16,6 +16,7 @@
     $phones = array_values(array_filter([$site->get('contact.phone_1'), $site->get('contact.phone_2')]));
     $tel = \App\Support\PhoneNumber::normalize($phones[0] ?? null);
     $logoUrl = $site->imageUrl('site.logo', 'assets/site/img/logo-csb.png');
+    $clientUser = auth('client')->user();
 @endphp
 <div class="topbar">
     <div class="container">
@@ -104,7 +105,14 @@
                         <a href="{{ route('site.panier') }}" class="nav-icon-btn d-none d-xl-inline-flex" aria-label="Panier"><i class='bx bx-cart' aria-hidden="true"></i><span class="cart-count" data-cart-count @if (! ($cartCount ?? 0)) hidden @endif>{{ $cartCount ?? 0 }}</span></a>
                     @endif
                     @if (Route::has('client.home'))
-                        <a href="{{ route('client.home') }}" class="nav-icon-btn" aria-label="Mon espace client"><i class='bx bx-user-circle' aria-hidden="true"></i></a>
+                        {{-- Libellé explicite plutôt qu'une icône seule : beaucoup de visiteurs découvrent l'espace client. --}}
+                        <a href="{{ route('client.home') }}" class="nav-account" title="Suivre mes demandes, commandes et tickets">
+                            <i class='bx bx-user-circle' aria-hidden="true"></i>
+                            <span>
+                                <small>{{ $clientUser ? 'Bonjour '.\Illuminate\Support\Str::before($clientUser->name, ' ') : 'Se connecter / S\'inscrire' }}</small>
+                                <strong>Mon compte<span class="nav-account-extra"> client</span></strong>
+                            </span>
+                        </a>
                     @endif
                     <a href="{{ route('site.search') }}" class="nav-link d-xl-none" data-search-open><i class='bx bx-search' aria-hidden="true"></i> Rechercher</a>
                 </div>

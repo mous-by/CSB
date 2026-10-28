@@ -19,7 +19,7 @@
             'materiels' => 'Contenus du site', 'realisations' => 'Contenus du site', 'articles' => 'Contenus du site',
             'temoignages' => 'Contenus du site', 'medias' => 'Contenus du site', 'synchro' => 'Contenus du site',
             'demandes' => 'Commercial', 'abonnes' => 'Commercial', 'clients' => 'Commercial',
-            'tickets' => 'Commercial', 'commandes' => 'Commercial', 'partenaires' => 'Commercial',
+            'tickets' => 'Commercial', 'commandes' => 'Commercial', 'partenaires' => 'Commercial', 'statistiques' => 'Commercial',
             'partenaire' => 'Réseaux sociaux', 'kit' => 'Réseaux sociaux',
             'users' => 'Administration',
         ];

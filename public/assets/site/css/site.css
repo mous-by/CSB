@@ -386,3 +386,106 @@ img { max-width: 100%; height: auto; }
 .search-item span { display: block; font-size: .82rem; color: var(--csb-muted); }
 .search-all { display: block; padding: .8rem 1.1rem; font-weight: 700; border-top: 1px solid var(--csb-border); text-decoration: none; }
 .search-empty { padding: 1rem 1.1rem; margin: 0; color: var(--csb-muted); }
+
+/* ——— Conseiller d'achat « Choisir mon ordinateur » ——— */
+.advisor-wizard { background: #fff; border: 1px solid var(--csb-border); border-radius: var(--csb-radius); box-shadow: var(--csb-shadow); padding: 1.5rem; max-width: 960px; margin: 0 auto; }
+.advisor-progress { height: 6px; background: var(--csb-blue-soft); border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem; display: none; }
+.advisor-wizard.is-wizard .advisor-progress { display: block; }
+.advisor-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--csb-blue), var(--csb-orange)); transition: width .35s ease; }
+.advisor-step { border: 0; padding: 0; margin: 0 0 2rem; min-width: 0; }
+.advisor-wizard.is-wizard .advisor-step { display: none; margin-bottom: 1.25rem; }
+.advisor-wizard.is-wizard .advisor-step.is-current { display: block; animation: advisorIn .3s ease; }
+@keyframes advisorIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+.advisor-step legend { font-size: clamp(1.15rem, 2.4vw, 1.45rem); font-weight: 800; color: var(--csb-ink); display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; float: none; width: 100%; }
+.advisor-step-num { flex: 0 0 auto; width: 2rem; height: 2rem; border-radius: 50%; background: var(--csb-orange); color: #1b1203; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; }
+.advisor-hint { color: var(--csb-muted); margin: -.5rem 0 1rem; font-size: .92rem; }
+.advisor-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem; }
+.advisor-option { position: relative; cursor: pointer; margin: 0; }
+.advisor-option-wide { grid-column: span 1; }
+.advisor-option input { position: absolute; opacity: 0; inset: 0; pointer-events: none; }
+.advisor-option > span { display: flex; flex-direction: column; gap: .35rem; height: 100%; padding: .9rem 1rem; border: 2px solid var(--csb-border); border-radius: 12px; background: #fff; color: var(--csb-ink); font-weight: 600; transition: border-color .2s, box-shadow .2s, transform .2s; }
+.advisor-option > span i { font-size: 1.6rem; color: var(--csb-blue); }
+.advisor-option small { font-weight: 400; color: var(--csb-muted); line-height: 1.45; }
+.advisor-option:hover > span { border-color: #b9c6e2; transform: translateY(-2px); }
+.advisor-option input:checked + span { border-color: var(--csb-orange); box-shadow: 0 0 0 3px rgba(245, 130, 32, .18); background: #fffaf5; }
+.advisor-option input:focus-visible + span { outline: 3px solid var(--csb-blue); outline-offset: 2px; }
+.advisor-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid var(--csb-border); padding-top: 1.25rem; }
+.advisor-counter { color: var(--csb-muted); font-weight: 600; font-size: .9rem; }
+.advisor-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem; border-radius: var(--csb-radius); background: var(--csb-blue-soft); border-left: 6px solid var(--csb-orange); }
+.eyebrow-inline { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--csb-orange-dark); }
+.advisor-advice { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+.advisor-advice li { display: flex; gap: .85rem; align-items: flex-start; padding: 1rem; background: #fff; border: 1px solid var(--csb-border); border-radius: 12px; }
+.advisor-advice li > i { font-size: 1.6rem; color: var(--csb-blue); flex: 0 0 auto; }
+.advisor-glossary { padding: 1.25rem; background: #fffaf5; border: 1px solid #f7d2b0; border-radius: 12px; height: 100%; }
+.advisor-glossary dt { color: var(--csb-ink); margin-top: .6rem; }
+.advisor-glossary dd { margin: 0; font-size: .9rem; }
+.advisor-match { position: relative; height: 100%; display: flex; flex-direction: column; }
+.advisor-match.is-best .csb-card { border-color: var(--csb-orange); box-shadow: 0 0 0 3px rgba(245, 130, 32, .2), var(--csb-shadow); }
+.advisor-best { align-self: flex-start; background: var(--csb-orange); color: #1b1203; font-weight: 800; font-size: .8rem; padding: .3rem .7rem; border-radius: 999px; margin-bottom: .5rem; }
+.advisor-reasons { list-style: none; padding: .75rem 0 0; margin: 0; font-size: .9rem; }
+.advisor-reasons li { display: flex; gap: .4rem; align-items: flex-start; margin-bottom: .3rem; }
+.advisor-reasons li.ok i { color: #198754; font-size: 1.15rem; }
+.advisor-reasons li.warn i { color: var(--csb-orange-dark); font-size: 1.05rem; margin-top: .15rem; }
+.advisor-help { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem; border: 1px dashed var(--csb-blue); border-radius: var(--csb-radius); background: #fff; }
+.advisor-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem; margin-bottom: 1.5rem; border-radius: var(--csb-radius); background: linear-gradient(120deg, var(--csb-blue), var(--csb-blue-dark)); color: #fff; }
+.advisor-banner strong { font-size: 1.1rem; }
+.advisor-banner i.lead-icon { font-size: 2rem; color: var(--csb-orange); }
+@media (max-width: 575.98px) {
+    .advisor-wizard { padding: 1rem; }
+    .advisor-options { grid-template-columns: 1fr 1fr; }
+    .advisor-option-wide { grid-column: 1 / -1; }
+    .advisor-nav .btn { flex: 1 1 auto; }
+}
+
+/* ——— Réalisations et matériels qui défilent en fond (site.partials.showcase) : pages d'accès de l'espace client,
+       questions du conseiller d'achat ——— */
+.showcase-stage { position: relative; overflow: hidden; background: linear-gradient(135deg, var(--csb-blue-dark), var(--csb-blue)); }
+.showcase-stage > .container { position: relative; z-index: 2; width: 100%; }
+.client-auth { min-height: calc(100vh - 140px); display: flex; align-items: center; }
+.auth-showcase { position: absolute; inset: -40px 0; display: flex; flex-direction: column; justify-content: center; gap: 18px; transform: rotate(-4deg) scale(1.08); pointer-events: none; z-index: 0; }
+.showcase-stage.has-showcase::after { content: ""; position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse at center, rgba(10, 39, 99, .55) 0%, rgba(10, 39, 99, .82) 60%, rgba(10, 39, 99, .92) 100%); }
+.auth-showcase-row { display: flex; gap: 18px; width: max-content; animation: auth-slide var(--auth-row-duration, 60s) linear infinite; }
+.auth-showcase-row.is-reverse { animation-direction: reverse; }
+@keyframes auth-slide { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 9px)); } }
+.auth-tile { position: relative; flex: 0 0 auto; width: 280px; height: 175px; margin: 0; border-radius: 14px; overflow: hidden; background: #0a2763; box-shadow: 0 12px 30px rgba(0, 0, 0, .25); }
+.auth-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.auth-tile.is-product { background: #fff; }
+.auth-tile.is-product img { object-fit: contain; padding: 12px 12px 30px; }
+.auth-tile figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: .5rem .75rem; font-size: .8rem; font-weight: 700; color: #fff; background: linear-gradient(transparent, rgba(0, 0, 0, .7)); }
+.client-auth .form-card { box-shadow: 0 30px 70px rgba(0, 0, 0, .35); }
+.auth-showcase-note { text-align: center; color: rgba(255, 255, 255, .85); font-size: .85rem; margin: 1rem 0 0; }
+.auth-showcase-note a { color: #fff; font-weight: 700; }
+@media (max-width: 575.98px) { .auth-tile { width: 200px; height: 125px; } }
+@media (prefers-reduced-motion: reduce) { .auth-showcase-row { animation: none; } }
+
+/* ——— Accès au compte client dans l'en-tête : libellé explicite ——— */
+.nav-account { display: inline-flex; align-items: center; gap: .55rem; padding: .35rem .85rem .35rem .45rem; border: 1px solid var(--csb-border); border-radius: 999px; color: var(--csb-ink); text-decoration: none; line-height: 1.15; white-space: nowrap; transition: border-color .2s, background .2s; }
+.nav-account:hover, .nav-account:focus-visible { border-color: var(--csb-blue); background: var(--csb-blue-soft); color: var(--csb-blue); }
+.nav-account > i { font-size: 1.7rem; color: var(--csb-blue); }
+.nav-account small { display: block; font-size: .72rem; color: var(--csb-muted); }
+.nav-account strong { font-size: .9rem; }
+/* Le logo ne se laisse jamais écraser par le menu, et sa boîte suit la longueur réelle du nom (« COMPUTER SERVICE
+   BARRY » débordait d'une boîte de 190 px et passait sous « Accueil »). Menu déplié : bouton du compte sur une ligne. */
+.site-header .brand-logo { flex-shrink: 0; }
+@media (min-width: 1200px) {
+    .site-header .brand-text strong { max-width: none; }
+    .nav-account { padding: .3rem .75rem .3rem .35rem; gap: .35rem; }
+    .nav-account small, .nav-account-extra { display: none; }
+    .nav-account > i { font-size: 1.5rem; }
+}
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    .site-header .nav-link { font-size: .88rem; padding: .5rem .45rem !important; }
+}
+@media (min-width: 1400px) {
+    .site-header .nav-link { font-size: .92rem; padding: .5rem .55rem !important; }
+}
+/* Téléphone : marque, panier et menu tiennent sur une seule ligne. */
+@media (max-width: 575.98px) {
+    .site-header .brand-logo { gap: .4rem; }
+    .site-header .brand-logo img { max-height: 40px; width: auto; }
+    .site-header .brand-text strong { font-size: .8rem; }
+    .site-header .brand-text small { font-size: .6rem; }
+}
+.advisor-stage .advisor-wizard { position: relative; box-shadow: 0 30px 70px rgba(0, 0, 0, .35); }
+/* Pied de page : colonne étroite, le nom passe à la ligne au lieu de déborder sur « Liens utiles ». */
+.footer-brand .brand-text strong { white-space: normal; }

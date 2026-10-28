@@ -11,14 +11,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * Jeton d'accès à l'API de synchronisation du stock. Seule son empreinte SHA-256 est enregistrée : le jeton en clair
- * n'est montré qu'une fois, à sa création.
+ * Jeton d'accès à l'API : synchronisation du stock (portée « stock ») ou application connectée qui ouvre des tickets
+ * (portée « tickets », son nom est celui de l'application). Seule son empreinte SHA-256 est enregistrée : le jeton en
+ * clair n'est montré qu'une fois, à sa création.
  */
-#[Fillable(['name', 'token_hash', 'last_four', 'last_used_at', 'created_by', 'revoked_at'])]
+#[Fillable(['name', 'scope', 'token_hash', 'last_four', 'last_used_at', 'created_by', 'revoked_at'])]
 #[Hidden(['token_hash'])]
 class ApiToken extends Model
 {
     use LogsActivity;
+
+    public const SCOPE_STOCK = 'stock';
+
+    public const SCOPE_TICKETS = 'tickets';
 
     protected function casts(): array
     {
@@ -26,16 +31,16 @@ class ApiToken extends Model
     }
 
     /** Crée un jeton ; renvoie [modèle, jeton en clair]. @return array{0: self, 1: string} */
-    public static function issue(string $name, ?User $creator): array
+    public static function issue(string $name, ?User $creator, string $scope = self::SCOPE_STOCK): array
     {
         $plain = 'csb_'.Str::random(44);
 
-        return [self::create(['name' => $name, 'token_hash' => hash('sha256', $plain), 'last_four' => substr($plain, -4), 'created_by' => $creator?->id]), $plain];
+        return [self::create(['name' => $name, 'scope' => $scope, 'token_hash' => hash('sha256', $plain), 'last_four' => substr($plain, -4), 'created_by' => $creator?->id]), $plain];
     }
 
-    public static function findActive(string $plain): ?self
+    public static function findActive(string $plain, string $scope = self::SCOPE_STOCK): ?self
     {
-        return $plain === '' ? null : self::whereNull('revoked_at')->where('token_hash', hash('sha256', $plain))->first();
+        return $plain === '' ? null : self::whereNull('revoked_at')->where('scope', $scope)->where('token_hash', hash('sha256', $plain))->first();
     }
 
     public function creator(): BelongsTo
@@ -48,14 +53,19 @@ class ApiToken extends Model
         return $query->whereNull('revoked_at');
     }
 
+    public function scopeScoped(Builder $query, string $scope): Builder
+    {
+        return $query->where('scope', $scope);
+    }
+
     public function activityModule(): string
     {
-        return 'synchro';
+        return $this->scope === self::SCOPE_TICKETS ? 'tickets' : 'synchro';
     }
 
     public function activityNoun(): string
     {
-        return 'Jeton d\'API';
+        return $this->scope === self::SCOPE_TICKETS ? 'Application connectée' : 'Jeton d\'API';
     }
 
     public function activityLabel(): string

@@ -10,6 +10,7 @@ use App\Models\ActivityLog;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
 use App\Models\User;
+use App\Services\Push\WebPush;
 use App\Services\Tickets\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,11 +28,11 @@ class TicketController extends Controller
 {
     public function __construct(private readonly TicketService $service) {}
 
-    public function index(): View
+    public function index(WebPush $push): View
     {
         Gate::authorize('viewAny', Ticket::class);
 
-        return view('tickets.index', ['tickets' => Ticket::with(['client', 'assignee'])->latest('last_activity_at')->get()]);
+        return view('tickets.index', ['tickets' => Ticket::with(['client', 'assignee'])->latest('last_activity_at')->get(), 'pushKey' => $push->publicKey()]);
     }
 
     public function show(Ticket $ticket): View

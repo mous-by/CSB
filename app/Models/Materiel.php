@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AdvisorForm;
 use App\Enums\Availability;
 use App\Enums\MaterielCondition;
 use App\Models\Concerns\HasGallery;
@@ -22,7 +23,7 @@ use Illuminate\Support\Collection;
  * Prix facultatif, en FCFA, affiché seulement s'il est renseigné (D-5).
  */
 #[Fillable([
-    'designation', 'slug', 'reference', 'category_id', 'brand', 'model', 'summary', 'description', 'specs', 'condition', 'price',
+    'designation', 'slug', 'reference', 'category_id', 'brand', 'model', 'summary', 'description', 'specs', 'advisor_usages', 'advisor_form', 'condition', 'price',
     'promo_price', 'promo_ends_on', 'price_conditions', 'availability', 'stock_quantity', 'main_media_id', 'is_published', 'is_featured', 'sort_order', 'seo_title',
     'seo_description', 'seo_media_id',
 ])]
@@ -39,6 +40,8 @@ class Materiel extends Model
             'condition' => MaterielCondition::class,
             'availability' => Availability::class,
             'specs' => 'array',
+            'advisor_usages' => 'array',
+            'advisor_form' => AdvisorForm::class,
             'price' => 'integer',
             'promo_price' => 'integer',
             'promo_ends_on' => 'date',

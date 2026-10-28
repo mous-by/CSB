@@ -22,6 +22,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Backup\DatabaseBackup;
 use App\Services\Partenaires\PartnerStats;
+use App\Services\Statistiques\SiteStats;
 use App\Support\SiteSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -52,6 +53,9 @@ class RealDashboardData
 
         if ($user->can('demandes.view')) {
             $this->demandes($user, $dashboard);
+        }
+        if ($user->can('statistiques.view')) {
+            $this->frequentation($dashboard);
         }
         $this->partenaires($user, $dashboard);
         $this->contenus($user, $dashboard);
@@ -237,6 +241,17 @@ class RealDashboardData
         ]];
 
         $dashboard['sections'][] = ['title' => 'Contenus du site', 'icon' => 'bx bx-globe', 'cards' => $cards, 'tables' => $tables];
+    }
+
+    /** Fréquentation du site (statistiques.view) : visites et comptes clients, détail dans « Statistiques du site ». */
+    private function frequentation(array &$dashboard): void
+    {
+        $s = app(SiteStats::class)->summary();
+        $dashboard['sections'][] = ['title' => 'Fréquentation du site', 'icon' => 'bx bx-line-chart', 'tables' => [], 'cards' => [
+            $this->card('Visites aujourd\'hui', (string) $s['today'], 'personnes venues sur le site', 'bx bx-user-voice', 'primary'),
+            $this->card('Visites (7 jours)', (string) $s['week'], '30 jours : '.$s['month'], 'bx bx-group', 'info'),
+            $this->card('Comptes clients', (string) $s['clients'], '+'.$s['clients_month'].' en 30 jours', 'bx bx-user-plus', 'success'),
+        ]];
     }
 
     /** Partenaires : ses propres résultats (rôle Communication) et commissions à payer (équipe). */

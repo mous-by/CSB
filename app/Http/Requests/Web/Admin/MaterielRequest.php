@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Web\Admin;
 
+use App\Enums\AdvisorForm;
+use App\Enums\AdvisorUsage;
 use App\Enums\Availability;
 use App\Enums\CategoryType;
 use App\Enums\MaterielCondition;
@@ -27,7 +29,7 @@ class MaterielRequest extends ContentRequest
 
     protected function nullableFields(): array
     {
-        return ['slug', 'reference', 'brand', 'model', 'summary', 'description', 'price', 'promo_price', 'promo_ends_on', 'price_conditions', 'main_media_id', 'seo_title', 'seo_description', 'seo_media_id'];
+        return ['slug', 'reference', 'brand', 'model', 'summary', 'description', 'price', 'promo_price', 'promo_ends_on', 'price_conditions', 'advisor_form', 'main_media_id', 'seo_title', 'seo_description', 'seo_media_id'];
     }
 
     protected function booleanFields(): array
@@ -47,6 +49,9 @@ class MaterielRequest extends ContentRequest
         }
         $specs = array_values(array_filter(array_map(fn ($row) => ['label' => trim((string) ($row['label'] ?? '')), 'value' => trim((string) ($row['value'] ?? ''))], $specs), fn ($row) => $row['label'] !== '' || $row['value'] !== ''));
         $this->merge(['specs' => $specs]);
+
+        // Conseiller d'achat : aucune case cochée = jamais proposé.
+        $this->merge(['advisor_usages' => array_values(array_unique((array) $this->input('advisor_usages', []))) ?: null]);
 
         if (is_string($this->input('reference'))) {
             $this->merge(['reference' => mb_strtoupper(trim($this->input('reference'))) ?: null]);
@@ -80,6 +85,9 @@ class MaterielRequest extends ContentRequest
             'specs' => ['nullable', 'array', 'max:40'],
             'specs.*.label' => ['required', 'string', 'max:100'],
             'specs.*.value' => ['required', 'string', 'max:250'],
+            'advisor_usages' => ['nullable', 'array'],
+            'advisor_usages.*' => [Rule::enum(AdvisorUsage::class)],
+            'advisor_form' => ['nullable', Rule::enum(AdvisorForm::class)],
             'condition' => ['required', Rule::enum(MaterielCondition::class)],
             'price' => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'promo_price' => ['nullable', 'integer', 'min:0', 'required_with:promo_ends_on', function ($attribute, $value, $fail) {
@@ -127,7 +135,7 @@ class MaterielRequest extends ContentRequest
     {
         return [
             'designation' => 'désignation', 'reference' => 'référence', 'slug' => 'adresse', 'category_id' => 'catégorie', 'brand' => 'marque', 'model' => 'modèle',
-            'summary' => 'résumé', 'description' => 'description', 'specs' => 'caractéristiques', 'condition' => 'état', 'price' => 'prix', 'promo_price' => 'prix promotionnel', 'promo_ends_on' => 'fin de la promotion',
+            'summary' => 'résumé', 'description' => 'description', 'specs' => 'caractéristiques', 'advisor_usages' => 'usages', 'advisor_form' => 'format', 'condition' => 'état', 'price' => 'prix', 'promo_price' => 'prix promotionnel', 'promo_ends_on' => 'fin de la promotion',
             'price_conditions' => 'conditions du prix', 'availability' => 'disponibilité', 'main_media_id' => 'photo principale',
             'gallery' => 'photos', 'sort_order' => 'ordre d\'affichage', 'seo_title' => 'titre SEO', 'seo_description' => 'méta-description',
         ];

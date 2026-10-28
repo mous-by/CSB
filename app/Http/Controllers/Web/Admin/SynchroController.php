@@ -23,7 +23,7 @@ class SynchroController extends Controller
             'withReference' => Materiel::whereNotNull('reference')->count(),
             'withoutReference' => Materiel::whereNull('reference')->count(),
             'syncs' => StockSync::with(['user', 'token'])->latest('id')->limit(50)->get(),
-            'tokens' => ApiToken::with('creator')->latest('id')->get(),
+            'tokens' => ApiToken::scoped(ApiToken::SCOPE_STOCK)->with('creator')->latest('id')->get(),
         ]);
     }
 
@@ -64,6 +64,7 @@ class SynchroController extends Controller
 
     public function revokeToken(ApiToken $token): RedirectResponse
     {
+        abort_unless($token->scope === ApiToken::SCOPE_STOCK, 404);
         $token->update(['revoked_at' => now()]);
 
         return redirect()->route('synchro.index')->with('status', "Jeton « {$token->name} » révoqué : il ne donne plus accès à l'API.");

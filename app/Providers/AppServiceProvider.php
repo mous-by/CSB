@@ -35,6 +35,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
@@ -68,6 +69,11 @@ class AppServiceProvider extends ServiceProvider
 
         // D14 : 8 caractères au moins, lettres et chiffres.
         Password::defaults(fn () => Password::min(8)->letters()->numbers());
+
+        // Proxy de confiance (config/site.php) : https et nom d'hôte du tunnel repris dans les adresses générées.
+        if ($proxies = config('site.trusted_proxies')) {
+            TrustProxies::at($proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
 
         // Superadmins créés automatiquement s'ils n'existent pas (D27) : au lancement du serveur de développement et après
         // chaque migration (déploiement). La première visite de la page de connexion est le filet pour l'hébergement Web.

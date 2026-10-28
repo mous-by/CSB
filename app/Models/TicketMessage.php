@@ -7,15 +7,18 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** Message du fil d'un ticket : du client, ou de l'équipe (public, ou note interne invisible du client). */
-#[Fillable(['ticket_id', 'client_id', 'user_id', 'body', 'is_internal', 'attachment_path', 'attachment_name', 'attachment_size'])]
+/**
+ * Message du fil d'un ticket : du demandeur (client de l'espace client, ou utilisateur d'une application connectée :
+ * `from_reporter`), ou de l'équipe (public, ou note interne invisible du demandeur).
+ */
+#[Fillable(['ticket_id', 'client_id', 'user_id', 'from_reporter', 'body', 'is_internal', 'attachment_path', 'attachment_name', 'attachment_size'])]
 class TicketMessage extends Model
 {
     use LogsActivity;
 
     protected function casts(): array
     {
-        return ['is_internal' => 'boolean', 'attachment_size' => 'integer'];
+        return ['is_internal' => 'boolean', 'from_reporter' => 'boolean', 'attachment_size' => 'integer'];
     }
 
     public function ticket(): BelongsTo
@@ -35,7 +38,7 @@ class TicketMessage extends Model
 
     public function fromClient(): bool
     {
-        return $this->client_id !== null;
+        return $this->client_id !== null || $this->from_reporter;
     }
 
     public function activityModule(): string

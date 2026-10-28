@@ -1,4 +1,4 @@
-{{-- Notification d'un ticket (équipe ou client). $ticket, $message (ou null), $intro, $url, $button. --}}
+{{-- Notification d'un ticket (équipe ou demandeur). $ticket, $message (ou null), $intro, $url (ou null), $button, $outro (facultatif). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="utf-8"><title>{{ $ticket->number }}</title></head>
@@ -13,7 +13,12 @@
             @if ($message)
                 <div style="padding:14px;background:#f5f7fb;border-left:4px solid #f58220;border-radius:6px">{!! nl2br(e($message->body)) !!}</div>
             @endif
-            <p style="margin:24px 0 0"><a href="{{ $url }}" style="display:inline-block;background:#f58220;color:#1b1203;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px">{{ $button }}</a></p>
+            @if ($url)
+                <p style="margin:24px 0 0"><a href="{{ $url }}" style="display:inline-block;background:#f58220;color:#1b1203;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px">{{ $button }}</a></p>
+            @endif
+            @if ($outro ?? null)
+                <p style="margin:24px 0 0">{{ $outro }}</p>
+            @endif
         </td></tr>
     </table>
 </body>

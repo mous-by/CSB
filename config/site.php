@@ -17,6 +17,10 @@ return [
     // Préfixe d'URL de l'administration (cahier §7 « URL dédiée »).
     'admin_path' => env('ADMIN_PATH', 'admin'),
 
+    // Tunnel (ngrok) ou proxy HTTPS devant le site : « * » ou adresses séparées par des virgules ; vide = aucun.
+    // Sans cela, les liens des CSS / JS / images sortent en http et le navigateur les bloque (contenu mixte).
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
     // Destinataire des e-mails de notification des demandes (cahier §3.1, §6.4) ; vide = adresse « contact.email ».
     'notification_email' => env('SITE_NOTIFICATION_EMAIL'),
 

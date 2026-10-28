@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Site\ActualiteController;
 use App\Http\Controllers\Site\BoutiqueController;
+use App\Http\Controllers\Site\ConseillerController;
 use App\Http\Controllers\Site\DemandeController;
 use App\Http\Controllers\Site\LogicielController;
 use App\Http\Controllers\Site\MaterielController;
@@ -24,6 +25,8 @@ Route::name('site.')->group(function () {
     Route::get('/logiciels/{logiciel:slug}', [LogicielController::class, 'show'])->name('logiciels.show');
     Route::get('/materiel', [MaterielController::class, 'index'])->name('materiels.index');
     Route::get('/materiel/{materiel:slug}', [MaterielController::class, 'show'])->name('materiels.show');
+    // Conseiller d'achat : questions simples → ordinateurs adaptés au métier et au budget.
+    Route::get('/choisir-mon-ordinateur', ConseillerController::class)->name('conseiller');
     Route::get('/realisations', [RealisationController::class, 'index'])->name('realisations.index');
     Route::get('/realisations/{realisation:slug}', [RealisationController::class, 'show'])->name('realisations.show');
     // Boutique (cahier §15.3) : panier en session, commande, suivi par lien secret.

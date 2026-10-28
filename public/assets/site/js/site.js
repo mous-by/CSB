@@ -942,6 +942,94 @@
     }
 
     /* Code promo de la commande : vérifié en AJAX, remise et nouveau total affichés avant validation. */
+    /* ——— Méga-menu « Nos solutions » : ouvert au survol sur ordinateur (souris, menu déplié à partir de 1200 px) ———
+       Au doigt et au clavier, le bouton ouvre le menu comme avant ; à la souris, le menu est déjà ouvert, le clic mène
+       à la page de toutes les solutions. Court délai à la sortie pour glisser du bouton vers le panneau. */
+    function initMegaHover() {
+        if (!window.bootstrap || !window.bootstrap.Dropdown) return;
+        var desktop = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1200px)');
+        document.querySelectorAll('.nav-mega').forEach(function (item) {
+            var toggle = item.querySelector('[data-bs-toggle="dropdown"]');
+            if (!toggle) return;
+            var dropdown = window.bootstrap.Dropdown.getOrCreateInstance
+                ? window.bootstrap.Dropdown.getOrCreateInstance(toggle)
+                : (window.bootstrap.Dropdown.getInstance(toggle) || new window.bootstrap.Dropdown(toggle));
+            var timer;
+            item.addEventListener('mouseenter', function () {
+                if (!desktop.matches) return;
+                clearTimeout(timer);
+                if (!item.querySelector('.dropdown-menu.show')) dropdown.show();
+            });
+            item.addEventListener('mouseleave', function () {
+                if (!desktop.matches) return;
+                clearTimeout(timer);
+                timer = setTimeout(function () { dropdown.hide(); toggle.blur(); }, 200);
+            });
+            var all = item.querySelector('.mega-all');
+            toggle.addEventListener('click', function (e) {
+                // detail > 0 : vrai clic de souris (pas la touche Entrée ni Espace).
+                if (!desktop.matches || !all || e.detail === 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = all.href;
+            }, true);
+        });
+    }
+
+    /* ——— Conseiller d'achat : une question à la fois (form[data-wizard] > fieldset[data-step]) ———
+       Sans JavaScript, toutes les questions s'affichent et le formulaire s'envoie normalement. Un choix unique
+       (bouton radio) passe à la question suivante ; la première question est obligatoire. */
+    function initWizard() {
+        var form = document.querySelector('form[data-wizard]');
+        if (!form) return;
+        var steps = Array.prototype.slice.call(form.querySelectorAll('[data-step]'));
+        var prev = form.querySelector('[data-wizard-prev]');
+        var next = form.querySelector('[data-wizard-next]');
+        var submit = form.querySelector('[data-wizard-submit]');
+        var counter = form.querySelector('[data-wizard-counter]');
+        var bar = form.querySelector('[data-wizard-progress]');
+        var current = 0;
+
+        function answered(step) {
+            var required = step.querySelector('input[required]');
+            return !required || !!step.querySelector('input[name="' + required.name + '"]:checked');
+        }
+        function show(index, focus) {
+            current = Math.max(0, Math.min(index, steps.length - 1));
+            steps.forEach(function (step, i) { step.classList.toggle('is-current', i === current); });
+            prev.classList.toggle('d-none', current === 0);
+            next.classList.toggle('d-none', current === steps.length - 1);
+            submit.classList.toggle('d-none', current !== steps.length - 1);
+            counter.textContent = 'Question ' + (current + 1) + ' sur ' + steps.length;
+            bar.style.width = ((current + 1) / steps.length * 100) + '%';
+            if (focus) {
+                var legend = steps[current].querySelector('legend');
+                legend.setAttribute('tabindex', '-1');
+                legend.focus({ preventScroll: true });
+                if (form.getBoundingClientRect().top < 0) form.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+            }
+        }
+        function forward() {
+            if (!answered(steps[current])) {
+                CSB.toast ? CSB.toast('Choisissez une réponse pour continuer.', 'warning') : announce('Choisissez une réponse pour continuer.');
+                return;
+            }
+            show(current + 1, true);
+        }
+
+        form.classList.add('is-wizard');
+        counter.classList.remove('d-none');
+        prev.addEventListener('click', function () { show(current - 1, true); });
+        next.addEventListener('click', forward);
+        form.addEventListener('change', function (e) {
+            if (e.target.type === 'radio' && current < steps.length - 1) setTimeout(forward, reduceMotion ? 0 : 250);
+        });
+        form.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && current < steps.length - 1) { e.preventDefault(); forward(); }
+        });
+        show(0, false);
+    }
+
     function initPromoCode() {
         var box = document.querySelector('[data-promo-box]');
         if (!box || !window.fetch) return;
@@ -992,6 +1080,8 @@
         initCheckout();
         initVideoLightbox();
         initPromoCode();
+        initWizard();
+        initMegaHover();
     });
 
     CSB.initReveal = initReveal;

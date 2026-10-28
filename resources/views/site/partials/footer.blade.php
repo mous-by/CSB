@@ -3,7 +3,7 @@
 @php
     $links = collect([
         ['site.home', 'Accueil'], ['site.about', 'À propos'], ['site.services', 'Nos services'], ['site.logiciels.index', 'Nos solutions'],
-        ['site.materiels.index', 'Matériel informatique'], ['site.realisations.index', 'Nos réalisations'], ['site.temoignages.index', 'Témoignages'], ['site.actualites.index', 'Actualités'], ['site.contact', 'Contact'],
+        ['site.materiels.index', 'Matériel informatique'], ['site.conseiller', 'Choisir mon ordinateur'], ['site.realisations.index', 'Nos réalisations'], ['site.temoignages.index', 'Témoignages'], ['site.actualites.index', 'Actualités'], ['site.contact', 'Contact'],
     ])->filter(fn ($item) => Route::has($item[0]));
     $phones = array_values(array_filter([$site->get('contact.phone_1'), $site->get('contact.phone_2')]));
     $tel = \App\Support\PhoneNumber::normalize($phones[0] ?? null);

@@ -7,12 +7,12 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-/** API de synchronisation : jeton « Authorization: Bearer csb_… » actif obligatoire. */
+/** API : jeton « Authorization: Bearer csb_… » actif et de la bonne portée (`sync.token:tickets`) obligatoire. */
 class AuthenticateSyncToken
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $scope = ApiToken::SCOPE_STOCK): Response
     {
-        $token = ApiToken::findActive((string) $request->bearerToken());
+        $token = ApiToken::findActive((string) $request->bearerToken(), $scope);
         if (! $token) {
             return response()->json(['message' => 'Jeton d\'accès absent, invalide ou révoqué.'], 401);
         }

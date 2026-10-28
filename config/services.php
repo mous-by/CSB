@@ -46,6 +46,13 @@ return [
         'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com'),
     ],
 
+    // Notifications push à l'équipe (Web Push, clés VAPID créées par `php artisan push:keys`) ; vides = désactivées.
+    'webpush' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT'),
+    ],
+
     // Conversion des vidéos de témoignages (MP4 lisible partout, image d'aperçu). Absent : vidéo publiée telle quelle.
     'ffmpeg' => [
         'ffmpeg' => env('FFMPEG_BINARY', 'ffmpeg'),
