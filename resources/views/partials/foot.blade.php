@@ -5,6 +5,7 @@
 <script src="{{ asset('assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}"></script>
 
 <script src="{{ asset('assets/js/app.js') }}"></script>
+<script src="{{ asset('assets/js/submit-guard.js') }}?v={{ filemtime(public_path('assets/js/submit-guard.js')) }}"></script>
 <script src="{{ asset('assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('assets/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/plugins/select2/js/select2.min.js') }}"></script>

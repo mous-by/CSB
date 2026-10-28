@@ -101,6 +101,9 @@
                                     @can('update', $materiel)
                                         <a href="{{ route('materiels.edit', $materiel) }}" class="btn btn-primary btn-sm" title="Modifier"><i class='bx bx-edit'></i></a>
                                     @endcan
+                                    @can('create', \App\Models\Materiel::class)
+                                        <a href="{{ route('materiels.create', ['modele' => $materiel->id]) }}" class="btn btn-outline-primary btn-sm" title="Dupliquer : nouvelle fiche pré-remplie"><i class='bx bx-copy'></i></a>
+                                    @endcan
                                     @can('publish', $materiel)
                                         <form method="POST" action="{{ route('materiels.publication', $materiel) }}">
                                             @csrf

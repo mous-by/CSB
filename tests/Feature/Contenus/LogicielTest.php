@@ -48,7 +48,8 @@ class LogicielTest extends TestCase
 
     public function test_the_gestionnaire_creates_and_publishes_a_software_with_its_visuals(): void
     {
-        $this->actingAs($this->gestionnaire)->get('/admin/logiciels/create')->assertOk()->assertSee('IDENTIFICATION');
+        $this->actingAs($this->gestionnaire)->get('/admin/logiciels/create')->assertOk()->assertSee('IDENTIFICATION')
+            ->assertSee('data-checklist', false)->assertSee('Enregistrer et publier')->assertSee('fiche-assistant.js');
 
         $this->post('/admin/logiciels', $this->payload([
             'logo_upload' => UploadedFile::fake()->image('logo.png', 300, 300),

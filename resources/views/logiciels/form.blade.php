@@ -32,7 +32,7 @@
         <div class="alert alert-danger"><i class='bx bx-error-circle me-1'></i>La fiche n'a pas été enregistrée : corrigez les champs signalés en rouge.</div>
     @endif
 
-    <form method="POST" action="{{ $logiciel ? route('logiciels.update', $logiciel) : route('logiciels.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ $logiciel ? route('logiciels.update', $logiciel) : route('logiciels.store') }}" enctype="multipart/form-data" id="logiciel-form">
         @csrf
         @if ($logiciel)
             @method('PUT')
@@ -154,6 +154,7 @@
                         <h6 class="mb-0 text-white"><i class='bx bx-globe me-2'></i>PUBLICATION</h6>
                     </div>
                     <div class="card-body">
+                        <div class="border rounded p-2 mb-3" data-checklist aria-live="polite"></div>
                         @if ($canPublish)
                             <div class="form-check form-switch mb-2">
                                 <input class="form-check-input" type="checkbox" role="switch" id="is_published" name="is_published" value="1" @checked($v('is_published', false))>
@@ -198,7 +199,31 @@
             <div class="card-body d-flex flex-wrap justify-content-end gap-2">
                 <a href="{{ route('logiciels.index') }}" class="btn btn-secondary">Annuler</a>
                 <button type="submit" class="btn btn-primary"><i class='bx bx-save me-1'></i>Enregistrer</button>
+                @if ($canPublish && ! $logiciel?->is_published)
+                    <button type="submit" class="btn btn-success" name="is_published" value="1" data-publish><i class='bx bx-globe me-1'></i>Enregistrer et publier</button>
+                @endif
             </div>
         </div>
     </form>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/fiche-assistant.js') }}?v={{ filemtime(public_path('assets/js/fiche-assistant.js')) }}"></script>
+    <script>
+        (function () {
+            const form = document.getElementById('logiciel-form');
+            const { val, hasFile, filledRows } = CSBFiche;
+            const missing = CSBFiche.checklist(form, form.querySelector('[data-checklist]'), [
+                { label: 'Nom', essential: true, ok: (f) => val(f, '#name') !== '' },
+                { label: 'Résumé', essential: true, ok: (f) => val(f, '#summary') !== '' },
+                { label: 'Catégorie', essential: true, ok: (f) => val(f, '#category_id') !== '' },
+                { label: 'Logo ou capture d\'écran', essential: true, ok: (f) => val(f, '#logo_media_id') !== '' || val(f, '#gallery') !== '' || hasFile(f, '[name="logo_upload"]') || hasFile(f, '[name="gallery_upload[]"]'), hint: 'La carte du catalogue s\'affiche sans visuel.' },
+                { label: 'Plateformes (web, Android…)', ok: (f) => f.querySelector('[name="platforms[]"]:checked') !== null },
+                { label: 'Problème traité', ok: (f) => val(f, '#problem') !== '', hint: 'Le besoin du client, en une ou deux phrases.' },
+                { label: 'Au moins 3 fonctionnalités', ok: (f) => filledRows(f, 'features') >= 3 },
+                { label: 'Au moins 2 captures d\'écran', ok: (f) => (f.querySelector('#gallery')?.selectedOptions.length || 0) + (f.querySelector('[name="gallery_upload[]"]')?.files.length || 0) >= 2 },
+            ]);
+            CSBFiche.publishButton(form, form.querySelector('[data-publish]'), missing);
+        })();
+    </script>
+@endpush

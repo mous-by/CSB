@@ -149,4 +149,28 @@ class MaterielTest extends TestCase
 
         $this->actingAs(User::factory()->commercial()->create())->get('/admin/materiels')->assertForbidden();
     }
+
+    public function test_a_product_is_duplicated_into_a_prefilled_unpublished_sheet(): void
+    {
+        $source = Materiel::factory()->create([
+            'designation' => 'HP EliteBook 840 G6', 'category_id' => $this->portables->id, 'reference' => 'HP-840-G6', 'price' => 250000,
+            'specs' => [['Processeur', 'Intel Core i5'], ['Mémoire', '16 Go']], 'advisor_usages' => ['bureautique', 'gestion'],
+            'is_published' => true, 'is_featured' => true,
+        ]);
+
+        $page = $this->actingAs($this->gestionnaire)->get('/admin/materiels/create?modele='.$source->id)->assertOk()
+            ->assertSee('Copie de « HP EliteBook 840 G6 »', false)->assertSee('value="HP EliteBook 840 G6"', false)
+            ->assertSee('Intel Core i5')->assertSee('250 000')->assertDontSee('value="HP-840-G6"', false)
+            ->assertSee('data-checklist', false)->assertSee('Enregistrer et publier')->assertSee('fiche-assistant.js')->assertSee('submit-guard.js');
+        $copy = $page->viewData('modele');
+        $this->assertFalse($copy->exists);
+        $this->assertNull($copy->slug);
+        $this->assertFalse((bool) $copy->is_published);
+        $this->assertFalse((bool) $copy->is_featured);
+        $this->assertSame(['bureautique', 'gestion'], $copy->advisor_usages);
+
+        // Fiche déjà publiée : pas de bouton « Enregistrer et publier ».
+        $this->get('/admin/materiels/'.$source->id.'/edit')->assertOk()->assertDontSee('Enregistrer et publier');
+        $this->get('/admin/materiels')->assertSee('/admin/materiels/create?modele='.$source->id, false);
+    }
 }

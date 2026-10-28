@@ -18,21 +18,27 @@
     <hr />
 
     @php
-        $v = fn (string $field, $default = null) => old($field, $materiel?->{$field} ?? $default);
-        $condition = old('condition', $materiel?->condition->value ?? 'neuf');
-        $availability = old('availability', $materiel?->availability->value ?? 'disponible');
-        $advisorUsages = (array) (old('advisor_usages', $materiel?->advisor_usages) ?? []);
-        $specs = old('specs', collect($materiel?->specList() ?? [])->map(fn ($row) => ['label' => $row[0], 'value' => $row[1]])->all());
+        // Valeurs : la fiche modifiée, ou la fiche dupliquée (« Dupliquer » de la liste : nouvelle fiche pré-remplie).
+        $source = $materiel ?? $modele ?? null;
+        $v = fn (string $field, $default = null) => old($field, $source?->{$field} ?? $default);
+        $condition = old('condition', $source?->condition->value ?? 'neuf');
+        $availability = old('availability', $source?->availability->value ?? 'disponible');
+        $advisorUsages = (array) (old('advisor_usages', $source?->advisor_usages) ?? []);
+        $specs = old('specs', collect($source?->specList() ?? [])->map(fn ($row) => ['label' => $row[0], 'value' => $row[1]])->all());
         $canPublish = auth()->user()->can('publish', \App\Models\Materiel::class);
-        $selectedGallery = old('gallery') !== null ? \App\Models\Media::whereIn('id', old('gallery'))->get()->sortBy(fn ($m) => array_search($m->id, old('gallery'))) : ($materiel?->gallery ?? collect());
-        $selectedMain = old('main_media_id') ? \App\Models\Media::find(old('main_media_id')) : $materiel?->mainImage;
+        $selectedGallery = old('gallery') !== null ? \App\Models\Media::whereIn('id', old('gallery'))->get()->sortBy(fn ($m) => array_search($m->id, old('gallery'))) : ($source?->gallery ?? collect());
+        $selectedMain = old('main_media_id') ? \App\Models\Media::find(old('main_media_id')) : $source?->mainImage;
     @endphp
+
+    @if ($modele ?? null)
+        <div class="alert alert-info"><i class='bx bx-copy me-1'></i>Copie de « {{ $modele->designation }} » : modifiez ce qui change (désignation, caractéristiques, prix, photos), puis enregistrez. La copie n'est pas publiée.</div>
+    @endif
 
     @if ($errors->any())
         <div class="alert alert-danger"><i class='bx bx-error-circle me-1'></i>La fiche n'a pas été enregistrée : corrigez les champs signalés en rouge.</div>
     @endif
 
-    <form method="POST" action="{{ $materiel ? route('materiels.update', $materiel) : route('materiels.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ $materiel ? route('materiels.update', $materiel) : route('materiels.store') }}" enctype="multipart/form-data" id="materiel-form">
         @csrf
         @if ($materiel)
             @method('PUT')
@@ -48,7 +54,8 @@
                         <div class="row g-3">
                             <div class="col-md-7">
                                 <label for="designation" class="form-label fw-semibold">Désignation <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('designation') is-invalid @enderror" id="designation" name="designation" value="{{ $v('designation') }}" maxlength="200" required placeholder="Ordinateur portable HP ProBook 450 G9">
+                                <input type="text" class="form-control @error('designation') is-invalid @enderror" id="designation" name="designation" value="{{ $v('designation') }}" maxlength="200" required placeholder="Ordinateur portable HP ProBook 450 G9" autocomplete="off">
+                                <div class="form-text">Marque, modèle, catégorie et format se remplissent d'après la désignation (modifiables).</div>
                                 @include('admin._field-error', ['field' => 'designation'])
                             </div>
                             <div class="col-md-5">
@@ -92,7 +99,10 @@
                                 @include('admin._field-error', ['field' => 'model'])
                             </div>
                             <div class="col-12">
-                                <label for="summary" class="form-label fw-semibold">Résumé</label>
+                                <div class="d-flex justify-content-between align-items-end">
+                                    <label for="summary" class="form-label fw-semibold">Résumé</label>
+                                    <button type="button" class="btn btn-link btn-sm p-0 mb-2" data-suggest-summary><i class='bx bx-bulb me-1'></i>Proposer d'après les caractéristiques</button>
+                                </div>
                                 <textarea class="form-control @error('summary') is-invalid @enderror" id="summary" name="summary" rows="2" maxlength="300">{{ $v('summary') }}</textarea>
                                 @include('admin._field-error', ['field' => 'summary'])
                             </div>
@@ -127,7 +137,7 @@
                             <div class="col-md-4">
                                 <label for="price" class="form-label fw-semibold">Prix indicatif</label>
                                 <div class="input-group">
-                                    <input type="text" inputmode="numeric" class="form-control @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price', $materiel?->price !== null ? number_format($materiel->price, 0, ',', ' ') : null) }}" placeholder="250 000">
+                                    <input type="text" inputmode="numeric" class="form-control @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price', $source?->price !== null ? number_format($source->price, 0, ',', ' ') : null) }}" placeholder="250 000">
                                     <span class="input-group-text">FCFA</span>
                                 </div>
                                 @include('admin._field-error', ['field' => 'price'])
@@ -145,7 +155,7 @@
                             <div class="col-md-4">
                                 <label for="promo_price" class="form-label fw-semibold">Prix promotionnel</label>
                                 <div class="input-group">
-                                    <input type="text" inputmode="numeric" class="form-control @error('promo_price') is-invalid @enderror" id="promo_price" name="promo_price" value="{{ old('promo_price', $materiel?->promo_price !== null ? number_format($materiel->promo_price, 0, ',', ' ') : null) }}" placeholder="225 000">
+                                    <input type="text" inputmode="numeric" class="form-control @error('promo_price') is-invalid @enderror" id="promo_price" name="promo_price" value="{{ old('promo_price', $source?->promo_price !== null ? number_format($source->promo_price, 0, ',', ' ') : null) }}" placeholder="225 000">
                                     <span class="input-group-text">FCFA</span>
                                 </div>
                                 @include('admin._field-error', ['field' => 'promo_price'])
@@ -153,7 +163,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="promo_ends_on" class="form-label fw-semibold">Fin de la promotion</label>
-                                <input type="date" class="form-control @error('promo_ends_on') is-invalid @enderror" id="promo_ends_on" name="promo_ends_on" value="{{ old('promo_ends_on', $materiel?->promo_ends_on?->format('Y-m-d')) }}">
+                                <input type="date" class="form-control @error('promo_ends_on') is-invalid @enderror" id="promo_ends_on" name="promo_ends_on" value="{{ old('promo_ends_on', $source?->promo_ends_on?->format('Y-m-d')) }}">
                                 @include('admin._field-error', ['field' => 'promo_ends_on'])
                                 <div class="form-text">Vide : jusqu'à ce que vous retiriez le prix promotionnel.</div>
                             </div>
@@ -174,6 +184,7 @@
                         <h6 class="mb-0 text-white"><i class='bx bx-globe me-2'></i>PUBLICATION</h6>
                     </div>
                     <div class="card-body">
+                        <div class="border rounded p-2 mb-3" data-checklist aria-live="polite"></div>
                         @if ($canPublish)
                             <div class="form-check form-switch mb-2">
                                 <input class="form-check-input" type="checkbox" role="switch" id="is_published" name="is_published" value="1" @checked($v('is_published', false))>
@@ -198,6 +209,8 @@
                     </div>
                     <div class="card-body">
                         <p class="small text-muted">Pour un ordinateur : cochez les usages qu'il couvre bien. Le conseiller du site le proposera aux visiteurs qui en ont besoin (rien de coché = jamais proposé).</p>
+                        <button type="button" class="btn btn-outline-primary btn-sm mb-2" data-suggest-usages><i class='bx bx-bulb me-1'></i>Proposer d'après les caractéristiques</button>
+                        <div data-usages-hint></div>
                         @foreach (\App\Enums\AdvisorUsage::cases() as $usage)
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="advisor_usages[]" value="{{ $usage->value }}" id="usage-{{ $usage->value }}" @checked(in_array($usage->value, $advisorUsages, true))>
@@ -209,7 +222,7 @@
                         <select class="form-select @error('advisor_form') is-invalid @enderror" id="advisor_form" name="advisor_form">
                             <option value="">— Non précisé —</option>
                             @foreach (\App\Enums\AdvisorForm::cases() as $case)
-                                <option value="{{ $case->value }}" @selected(old('advisor_form', $materiel?->advisor_form?->value) === $case->value)>{{ $case->label() }}</option>
+                                <option value="{{ $case->value }}" @selected(old('advisor_form', $source?->advisor_form?->value) === $case->value)>{{ $case->label() }}</option>
                             @endforeach
                         </select>
                         @include('admin._field-error', ['field' => 'advisor_form'])
@@ -236,13 +249,19 @@
             <div class="card-body d-flex flex-wrap justify-content-end gap-2">
                 <a href="{{ route('materiels.index') }}" class="btn btn-secondary">Annuler</a>
                 <button type="submit" class="btn btn-primary"><i class='bx bx-save me-1'></i>Enregistrer</button>
+                @if ($canPublish && ! $materiel?->is_published)
+                    <button type="submit" class="btn btn-success" name="is_published" value="1" data-publish><i class='bx bx-globe me-1'></i>Enregistrer et publier</button>
+                @endif
             </div>
         </div>
     </form>
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('assets/js/fiche-assistant.js') }}?v={{ filemtime(public_path('assets/js/fiche-assistant.js')) }}"></script>
     <script>
+        CSBFiche.materiel(document.getElementById('materiel-form'));
+
         // Prix promotionnel : remise calculée en direct sous le champ.
         (function () {
             const num = (el) => parseInt((el.value || '').replace(/[^0-9]/g, ''), 10);

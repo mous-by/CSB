@@ -75,6 +75,7 @@
     @endif
 
     <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/submit-guard.js') }}?v={{ filemtime(public_path('assets/js/submit-guard.js')) }}"></script>
     <script src="{{ asset('assets/site/js/site.js') }}?v={{ filemtime(public_path('assets/site/js/site.js')) }}"></script>
     @include('partials.password-toggle')
     @stack('scripts')

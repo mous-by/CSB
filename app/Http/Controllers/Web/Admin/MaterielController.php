@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Materiel;
 use App\Services\Contenus\MaterielService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -29,11 +30,19 @@ class MaterielController extends Controller
         ]);
     }
 
-    public function create(): View
+    /** Nouvelle fiche ; avec ?modele={id} (« Dupliquer »), pré-remplie d'après une fiche existante. */
+    public function create(Request $request): View
     {
         Gate::authorize('create', Materiel::class);
 
-        return view('materiels.form', $this->formData(null));
+        $source = $request->integer('modele') ? Materiel::with(['gallery', 'mainImage'])->find($request->integer('modele')) : null;
+        // La copie garde le produit (désignation, caractéristiques, prix, photos, conseiller), pas ce qui est propre à
+        // la fiche d'origine : adresse, référence de stock, publication, mise en avant, promotion, référencement.
+        $modele = $source?->replicate(['slug', 'reference', 'stock_quantity', 'stock_synced_at', 'is_published', 'published_at', 'is_featured',
+            'promo_price', 'promo_ends_on', 'seo_title', 'seo_description', 'seo_media_id'])
+            ->setRelation('gallery', $source->gallery)->setRelation('mainImage', $source->mainImage);
+
+        return view('materiels.form', $this->formData(null) + ['modele' => $modele]);
     }
 
     public function store(MaterielRequest $request): RedirectResponse

@@ -212,6 +212,7 @@
     </main>
 
     @include('partials.password-toggle')
+    <script src="{{ asset('assets/js/submit-guard.js') }}?v={{ filemtime(public_path('assets/js/submit-guard.js')) }}"></script>
     @stack('scripts')
 </body>
 </html>
