@@ -251,9 +251,10 @@
     @if ($site->rows('home.stats', 3))
         <section class="stats-band">
             <div class="container">
-                <div class="stats-grid">
+                <div class="stats-grid" style="--stats: {{ count($site->rows('home.stats', 3)) }}">
                     @foreach ($site->rows('home.stats', 3) as [$value, $statLabel, $icon])
                         @php
+                            $value = strtr($value, $counters ?? []);
                             preg_match('/^(\D*)(\d+)(\D*)$/u', $value, $parts);
                         @endphp
                         <div class="stat-item">

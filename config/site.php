@@ -58,8 +58,9 @@ return [
         'home.values' => "bx-medal|Qualité|Des solutions fiables et durables\nbx-check-shield|Fiabilité|Un accompagnement professionnel\nbx-rocket|Performance|Des outils adaptés à vos besoins\nbx-group|Satisfaction client|Votre satisfaction, notre priorité !",
         'home.why_title' => "Pourquoi choisir CSB\u{00A0}?",
         'home.why_points' => "Une expertise reconnue\nDes solutions adaptées à vos besoins\nUn accompagnement personnalisé\nUn support technique réactif\nDes outils modernes et sécurisés",
-        // Une ligne par chiffre : valeur | libellé | icône Boxicons (chiffres fournis par CSB)
-        'home.stats' => "+50|Projets réalisés|bx-cog\n+100|Clients satisfaits|bx-group\n4|Solutions principales|bx-desktop\n3+|Années d'expérience|bx-trophy",
+        // Une ligne par chiffre : valeur | libellé | icône Boxicons (chiffres fournis par CSB ; {visiteurs}, {clients} et
+        // {realisations} sont remplacés par le vrai nombre, cf. SiteStats::COUNTERS)
+        'home.stats' => "+50|Projets réalisés|bx-cog\n+100|Clients satisfaits|bx-group\n4|Solutions principales|bx-desktop\n3+|Années d'expérience|bx-trophy\n{visiteurs}|Visites du site|bx-show",
         // Images (identifiant d'une image de la bibliothèque) ; vide = visuel fourni avec le site.
         'site.logo' => '',
         'home.hero_image' => '',

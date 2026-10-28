@@ -2,10 +2,13 @@
 
 namespace App\Services\Statistiques;
 
+use App\Models\AppSetting;
 use App\Models\Client;
 use App\Models\Commande;
 use App\Models\Demande;
+use App\Models\Realisation;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -21,6 +24,12 @@ class SiteStats
         'facebook' => 'Facebook / Messenger', 'whatsapp' => 'WhatsApp', 'reseaux' => 'Autres réseaux sociaux (TikTok, Instagram…)',
         'partenaire' => 'Lien d\'un partenaire', 'autre_site' => 'Autres sites', 'interne' => 'Depuis le site lui-même',
     ];
+
+    /** Visites déjà purgées de `page_vues` (stats:purge), pour que le total affiché sur le site ne baisse jamais. */
+    public const ARCHIVED_VISITS_KEY = 'stats.visites_archivees';
+
+    /** Jetons utilisables dans les « Chiffres clés » de l'accueil (Pages et paramètres), remplacés par le vrai nombre. */
+    public const COUNTERS = ['{visiteurs}' => 'visites du site depuis le début', '{clients}' => 'comptes clients', '{realisations}' => 'réalisations publiées'];
 
     public const DEVICES = ['telephone' => 'Téléphone', 'ordinateur' => 'Ordinateur', 'tablette' => 'Tablette'];
 
@@ -42,6 +51,21 @@ class SiteStats
             'clients' => Client::count(),
             'clients_month' => Client::where('created_at', '>=', today()->subDays(29))->count(),
         ];
+    }
+
+    /**
+     * Valeurs des jetons COUNTERS (cache 10 min : l'accueil est la page la plus vue).
+     *
+     * @return array<string, string>
+     */
+    public function publicCounters(): array
+    {
+        return Cache::remember('site.public_counters', 600, fn () => [
+            '{visiteurs}' => (string) ((int) DB::table('page_vues')->selectRaw('COUNT(DISTINCT day, visitor) as total')->value('total')
+                + (int) AppSetting::where('key', self::ARCHIVED_VISITS_KEY)->value('value')),
+            '{clients}' => (string) Client::count(),
+            '{realisations}' => (string) Realisation::published()->count(),
+        ]);
     }
 
     /** @return array<string, mixed> */

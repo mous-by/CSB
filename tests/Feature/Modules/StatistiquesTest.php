@@ -4,6 +4,8 @@ namespace Tests\Feature\Modules;
 
 use App\Models\Client;
 use App\Models\User;
+use App\Services\Statistiques\SiteStats;
+use App\Support\SiteSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\Concerns\BuildsFoundation;
@@ -78,5 +80,21 @@ class StatistiquesTest extends TestCase
 
         $this->artisan('stats:purge')->assertSuccessful();
         $this->assertSame(4, DB::table('page_vues')->count(), 'la page vue de plus de 13 mois est supprimée');
+        $this->assertSame('1', DB::table('app_settings')->where('key', SiteStats::ARCHIVED_VISITS_KEY)->value('value'), 'sa visite reste dans le total');
+    }
+
+    public function test_the_home_page_shows_the_live_number_of_visits(): void
+    {
+        foreach (['a', 'b'] as $visitor) {
+            DB::table('page_vues')->insert(['day' => today()->subDay()->toDateString(), 'visitor' => str_pad($visitor, 32, '0'), 'path' => '/', 'route' => 'site.home', 'source' => 'direct', 'device' => 'ordinateur', 'created_at' => now()]);
+        }
+        DB::table('app_settings')->insert(['key' => SiteStats::ARCHIVED_VISITS_KEY, 'value' => '40', 'created_at' => now(), 'updated_at' => now()]);
+        Client::factory()->count(3)->create();
+        app(SiteSettings::class)->save(['home.stats' => "+50|Projets réalisés|bx-cog\n{visiteurs}|Visites du site|bx-show\n{clients}|Comptes clients|bx-user"]);
+
+        $this->flushHeaders()->get('/')->assertOk()
+            ->assertSee('data-count="42"', false)->assertSee('Visites du site')
+            ->assertSee('data-count="3"', false)->assertSee('Comptes clients')
+            ->assertDontSee('{visiteurs}');
     }
 }

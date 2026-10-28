@@ -63,7 +63,7 @@ class SiteSettings
             'home.why_title' => ['Titre « Pourquoi CSB »', 'text', 120],
             'home.why_points' => ['Arguments « Pourquoi CSB »', 'textarea', 1000, 'Un argument par ligne.'],
             'home.why_image' => ['Photo « Pourquoi CSB »', 'image', 0],
-            'home.stats' => ['Chiffres clés', 'textarea', 600, 'Une ligne par chiffre : valeur | libellé | icône (ex. « +50|Projets réalisés|bx-cog »). Uniquement des chiffres vérifiés.'],
+            'home.stats' => ['Chiffres clés', 'textarea', 600, 'Une ligne par chiffre : valeur | libellé | icône (ex. « +50|Projets réalisés|bx-cog »). Uniquement des chiffres vérifiés. Chiffres automatiques : {visiteurs} (visites du site), {clients} (comptes clients), {realisations} (réalisations publiées), ex. « {visiteurs}|Visites du site|bx-show ».'],
         ]],
         'a-propos' => ['label' => 'À propos', 'permission' => 'pages.update', 'icon' => 'bx bx-info-circle', 'fields' => [
             'about.presentation' => ['Présentation de l\'entreprise', 'markdown', 5000],
