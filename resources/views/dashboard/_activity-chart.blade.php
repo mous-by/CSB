@@ -1,7 +1,8 @@
 {{-- Activité des N derniers jours (repris du gabarit) : deux séries par jour en colonnes groupées, une seule échelle,
      SVG rendu côté serveur (aucune bibliothèque, aucun CDN). Palette validée (2 séries, clair et sombre) ; légende,
      infobulle au survol et vue tableau pour l'accessibilité.
-     $chart : title, empty, series [a => libellé, b => libellé], days [[date, label, a, b]], max, totals [a, b]. --}}
+     $chart : title, empty, series [a => libellé, b => libellé], days [[date, label, a, b, tick?]], max, totals [a, b].
+     `tick` (facultatif) : étiquette de l'axe, vide pour la sauter quand il y a beaucoup de colonnes. --}}
 @php
     $days = $chart['days'];
     $n = count($days);
@@ -49,7 +50,7 @@
                         @endphp
                         <path d="{{ $bar($x0, $day['a']) }}" class="viz-s1" />
                         <path d="{{ $bar($x0 + $barW + 2, $day['b']) }}" class="viz-s2" />
-                        <text x="{{ $left + $i * $band + $band / 2 }}" y="{{ $plotBottom + 16 }}" text-anchor="middle" class="viz-tick">{{ $day['label'] }}</text>
+                        <text x="{{ $left + $i * $band + $band / 2 }}" y="{{ $plotBottom + 16 }}" text-anchor="middle" class="viz-tick">{{ $day['tick'] ?? $day['label'] }}</text>
                         <rect x="{{ $left + $i * $band }}" y="{{ $plotTop }}" width="{{ $band }}" height="{{ $plotBottom - $plotTop }}" class="viz-hit"
                               data-label="{{ $day['label'] }}" data-a="{{ $day['a'] }}" data-b="{{ $day['b'] }}" />
                     @endforeach
@@ -105,7 +106,17 @@
             figure.querySelectorAll('.viz-hit').forEach((hit) => {
                 hit.addEventListener('mousemove', (e) => {
                     const box = figure.getBoundingClientRect();
-                    tip.innerHTML = '<strong>' + hit.dataset.label + '</strong><br><i class="viz-swatch viz-s1"></i>Entrées : ' + hit.dataset.entrees + '<br><i class="viz-swatch viz-s2"></i>Sorties : ' + hit.dataset.sorties;
+                    tip.replaceChildren();
+                    const title = document.createElement('strong');
+                    title.textContent = hit.dataset.label;
+                    tip.append(title);
+                    [['a', 'viz-s1'], ['b', 'viz-s2']].forEach(([key, swatch]) => {
+                        const line = document.createElement('div');
+                        const dot = document.createElement('i');
+                        dot.className = 'viz-swatch ' + swatch;
+                        line.append(dot, seriesLabels[key] + ' : ' + hit.dataset[key]);
+                        tip.append(line);
+                    });
                     tip.classList.remove('d-none');
                     const x = Math.min(e.clientX - box.left + 12, box.width - tip.offsetWidth - 4);
                     tip.style.left = Math.max(4, x) + 'px';

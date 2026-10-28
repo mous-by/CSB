@@ -14,8 +14,8 @@
                 </ol>
             </nav>
         </div>
-        @if ($ticket->client?->phone && \App\Support\PhoneNumber::normalize($ticket->client->phone))
-            <div class="ms-auto"><a href="tel:{{ \App\Support\PhoneNumber::normalize($ticket->client->phone) }}" class="btn btn-outline-primary btn-sm"><i class='bx bx-phone me-1'></i>Appeler le client</a></div>
+        @if ($ticket->requesterPhone() && \App\Support\PhoneNumber::normalize($ticket->requesterPhone()))
+            <div class="ms-auto"><a href="tel:{{ \App\Support\PhoneNumber::normalize($ticket->requesterPhone()) }}" class="btn btn-outline-primary btn-sm"><i class='bx bx-phone me-1'></i>Appeler le client</a></div>
         @endif
     </div>
     <hr />
@@ -32,6 +32,7 @@
                         <span class="badge bg-light text-dark">{{ $ticket->category->label() }}</span>
                         <span class="badge {{ $ticket->priority->badge() }}">{{ $ticket->priority->label() }}</span>
                         @if ($ticket->device)<span class="badge bg-light text-dark"><i class='bx bx-devices me-1'></i>{{ $ticket->device }}</span>@endif
+                        @if ($ticket->isExternal())<span class="badge bg-info-subtle text-dark"><i class='bx bx-plug me-1'></i>Via {{ $ticket->source_app }}</span>@endif
                     </div>
                     <div class="ticket-thread-admin">
                         @foreach ($ticket->messages as $message)
@@ -39,7 +40,7 @@
                                 <div class="d-flex justify-content-between flex-wrap gap-2 small mb-1">
                                     <strong>
                                         @if ($message->fromClient())
-                                            <i class='bx bx-user me-1'></i>{{ $message->client?->name ?? 'Client' }}
+                                            <i class='bx bx-user me-1'></i>{{ $message->client?->name ?? $ticket->requesterName() }}
                                         @else
                                             <i class='bx bx-headphone me-1'></i>{{ $message->author?->displayName() ?? 'Équipe' }}
                                             @if ($message->is_internal)<span class="badge bg-warning text-dark ms-1">Note interne</span>@endif
@@ -99,10 +100,13 @@
                 <div class="card-header card-header-brand"><h6 class="mb-0 text-white"><i class='bx bx-user-pin me-2'></i>CLIENT</h6></div>
                 <div class="card-body">
                     <dl class="nv-dl mb-0">
-                        <dt>Nom</dt><dd>{{ $ticket->client?->name ?? '—' }}</dd>
-                        <dt>Organisation</dt><dd>{{ $ticket->client?->organization ?? '—' }}</dd>
-                        <dt>E-mail</dt><dd class="text-break">{{ $ticket->client?->email ?? '—' }}</dd>
-                        <dt>Téléphone</dt><dd>{{ $ticket->client?->phone ?? '—' }}</dd>
+                        <dt>Nom</dt><dd>{{ $ticket->requesterName() }}</dd>
+                        @if ($ticket->isExternal())
+                            <dt>Application</dt><dd>{{ $ticket->source_app }}@if ($ticket->reporter_role) · {{ $ticket->reporter_role }}@endif</dd>
+                        @endif
+                        <dt>Organisation</dt><dd>{{ $ticket->requesterOrganization() ?? '—' }}</dd>
+                        <dt>E-mail</dt><dd class="text-break">{{ $ticket->requesterEmail() ?? '—' }}</dd>
+                        <dt>Téléphone</dt><dd>{{ $ticket->requesterPhone() ?? '—' }}</dd>
                         <dt>Ouvert le</dt><dd>{{ $ticket->created_at->format('d/m/Y H:i') }}</dd>
                     </dl>
                     @if ($ticket->client && auth()->user()->can('clients.view') && Route::has('clients.show'))
@@ -125,7 +129,7 @@
                                 @endforeach
                             </select>
                             <button type="submit" class="btn btn-primary w-100"><i class='bx bx-check me-1'></i>Mettre à jour le statut</button>
-                            <p class="small text-muted mt-2 mb-0">Le client est prévenu par e-mail du changement.</p>
+                            <p class="small text-muted mt-2 mb-0">{{ $ticket->isExternal() ? "Le client le voit dans {$ticket->source_app}".($ticket->requesterEmail() ? ' et le reçoit par e-mail.' : '.') : 'Le client est prévenu par e-mail du changement.' }}</p>
                         </form>
                         <hr>
                         <form method="POST" action="{{ route('tickets.update', $ticket) }}">

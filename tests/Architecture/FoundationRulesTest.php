@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Concerns\LogsActivity;
 use App\Models\DocumentSequence;
 use App\Models\MouvementStock;
+use App\Models\PushSubscription;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -17,9 +18,9 @@ class FoundationRulesTest extends TestCase
 {
     public function test_every_business_model_uses_logs_activity(): void
     {
-        // Exemptés : les journaux eux-mêmes (audit, mouvements de stock, non modifiables) et le compteur technique de
-        // numérotation (le numéro attribué est audité avec son document).
-        $exempt = [ActivityLog::class, MouvementStock::class, DocumentSequence::class];
+        // Exemptés : les journaux eux-mêmes (audit, mouvements de stock, non modifiables), le compteur technique de
+        // numérotation (le numéro attribué est audité avec son document) et les abonnements push (appareils, technique).
+        $exempt = [ActivityLog::class, MouvementStock::class, DocumentSequence::class, PushSubscription::class];
 
         foreach (glob(app_path('Models/*.php')) as $file) {
             $class = 'App\\Models\\'.basename($file, '.php');
@@ -118,10 +119,11 @@ class FoundationRulesTest extends TestCase
                 continue;
             }
 
-            // API de synchronisation du stock (routes `api.*`) : sous /api, jeton d'accès et débit limité, jamais la session.
+            // API (routes `api.*` : stock, tickets des applications) : sous /api, jeton d'accès de la bonne portée
+            // (sync.token, sync.token:tickets) et débit limité, jamais la session.
             if (str_starts_with((string) $name, 'api.')) {
                 $this->assertStringStartsWith('api/', $route->uri(), "{$route->uri()} : l'API vit sous /api.");
-                $this->assertContains('sync.token', $middleware, "{$route->uri()} : jeton d'accès (sync.token) obligatoire.");
+                $this->assertTrue(collect($middleware)->contains(fn ($m) => is_string($m) && ($m === 'sync.token' || str_starts_with($m, 'sync.token:'))), "{$route->uri()} : jeton d'accès (sync.token) obligatoire.");
                 $this->assertTrue(collect($middleware)->contains(fn ($m) => is_string($m) && str_starts_with($m, 'throttle')), "{$route->uri()} : API sans limitation de débit.");
                 $this->assertNotContains('auth', $middleware, "{$route->uri()} : l'API n'utilise pas la session de l'administration.");
 

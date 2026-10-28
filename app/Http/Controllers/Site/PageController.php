@@ -11,6 +11,7 @@ use App\Models\Materiel;
 use App\Models\Prestation;
 use App\Models\Realisation;
 use App\Models\Temoignage;
+use App\Services\Statistiques\SiteStats;
 use App\Support\Markdown;
 use App\Support\Seo;
 use App\Support\SiteSettings;
@@ -27,7 +28,7 @@ class PageController extends Controller
     /**
      * Accueil (cahier §4) : chaque section n'apparaît que si elle a du contenu publié.
      */
-    public function home(): View
+    public function home(SiteStats $stats): View
     {
         $sections = [];
 
@@ -57,6 +58,7 @@ class PageController extends Controller
                 ->orderByRaw('CASE WHEN promo_price IS NOT NULL AND price IS NOT NULL AND promo_price < price AND (promo_ends_on IS NULL OR promo_ends_on >= ?) THEN 0 ELSE 1 END', [today()->toDateString()])
                 ->ordered()->limit(12)->get(),
             'sections' => $sections,
+            'counters' => str_contains($this->settings->get('home.stats'), '{') ? $stats->publicCounters() : [],
             'seo' => Seo::make(canonical: route('site.home')),
         ]);
     }

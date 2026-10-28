@@ -14,3 +14,5 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->every
 Schedule::command('queue:work --queue=videos --stop-when-empty --timeout=1900 --tries=1')->everyMinute()->withoutOverlapping(60);
 // Envois de vidéos abandonnés (jamais rattachés à un témoignage) : supprimés après 24 h.
 Schedule::command('videos:clean')->daily();
+// Statistiques de fréquentation : pages vues de plus de 13 mois supprimées.
+Schedule::command('stats:purge')->daily();

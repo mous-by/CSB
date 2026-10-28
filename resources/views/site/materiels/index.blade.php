@@ -12,6 +12,15 @@
 
     <section class="section">
         <div class="container">
+            @if (Route::has('site.conseiller'))
+                <div class="advisor-banner">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class='bx bx-compass lead-icon' aria-hidden="true"></i>
+                        <div><strong>Vous ne savez pas quel ordinateur choisir ?</strong><br>Six questions simples sur votre métier et votre budget : nous vous montrons les modèles qui vous conviennent.</div>
+                    </div>
+                    <a href="{{ route('site.conseiller') }}" class="btn btn-accent">Me laisser guider</a>
+                </div>
+            @endif
             <form method="GET" action="{{ route('site.materiels.index') }}" class="filter-bar" role="search" aria-label="Filtrer le matériel" data-ajax-filter="#catalogue-results">
                 <div class="row g-3 align-items-end">
                     <div class="col-lg-4">
