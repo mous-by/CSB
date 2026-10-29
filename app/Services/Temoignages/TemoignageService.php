@@ -2,6 +2,7 @@
 
 namespace App\Services\Temoignages;
 
+use App\Mail\TemoignageMerci;
 use App\Mail\TemoignageRecu;
 use App\Models\Client;
 use App\Models\Temoignage;
@@ -56,6 +57,7 @@ class TemoignageService
         }
 
         $this->notifyTeam($temoignage->fresh());
+        $this->thankAuthor($temoignage->fresh(), $client);
 
         return $temoignage;
     }
@@ -88,6 +90,21 @@ class TemoignageService
         }
 
         return $temoignage;
+    }
+
+    /** Remerciement à l'auteur : contact laissé s'il s'agit d'un e-mail, sinon e-mail de son compte client. */
+    private function thankAuthor(Temoignage $temoignage, ?Client $client): void
+    {
+        $email = filter_var(trim((string) $temoignage->contact), FILTER_VALIDATE_EMAIL) ?: $client?->email;
+        if (! $email) {
+            return;
+        }
+
+        try {
+            Mail::to($email, $temoignage->author_name)->send(new TemoignageMerci($temoignage));
+        } catch (Throwable $e) {
+            Log::error('Remerciement du témoignage impossible : '.$e->getMessage());
+        }
     }
 
     private function notifyTeam(Temoignage $temoignage): void

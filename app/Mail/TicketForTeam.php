@@ -19,6 +19,6 @@ class TicketForTeam extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'mail.ticket', with: ['ticket' => $this->ticket, 'message' => $this->ticket->messages->last(), 'intro' => $this->event.' de '.$this->ticket->requesterName().($this->ticket->isExternal() ? " (via {$this->ticket->source_app})" : '').'.', 'url' => route('tickets.show', $this->ticket), 'button' => 'Traiter le ticket']);
+        return new Content(view: 'mail.ticket', with: ['ticket' => $this->ticket, 'ticketMessage' => $this->ticket->messages->last(), 'intro' => $this->event.' de '.$this->ticket->requesterName().($this->ticket->isExternal() ? " (via {$this->ticket->source_app})" : '').'.', 'url' => route('tickets.show', $this->ticket), 'button' => 'Traiter le ticket']);
     }
 }

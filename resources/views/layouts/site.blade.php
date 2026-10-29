@@ -22,6 +22,7 @@
         <meta name="google-site-verification" content="{{ $site->get('seo.google_site_verification') }}">
     @endif
     <meta name="theme-color" content="#103b8e">
+    @include('partials.pwa-head', ['app' => 'site'])
 
     {{-- Partage (Open Graph : Facebook, WhatsApp, LinkedIn) --}}
     <meta property="og:site_name" content="{{ $site->get('company.name') }}">
@@ -78,6 +79,7 @@
     <script src="{{ asset('assets/js/submit-guard.js') }}?v={{ filemtime(public_path('assets/js/submit-guard.js')) }}"></script>
     <script src="{{ asset('assets/site/js/site.js') }}?v={{ filemtime(public_path('assets/site/js/site.js')) }}"></script>
     @include('partials.password-toggle')
+    @include('partials.pwa-install', ['app' => 'site'])
     @stack('scripts')
 </body>
 </html>

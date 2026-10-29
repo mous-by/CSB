@@ -2,6 +2,7 @@
 <html lang="fr" class="semi-bleu">
 <head>
     @include('partials.head')
+    @include('partials.pwa-head', ['app' => 'team'])
     @stack('styles')
 </head>
 <body>
@@ -24,6 +25,7 @@
 
     @include('partials.foot')
     @include('partials.password-toggle')
+    @include('partials.pwa-install', ['app' => 'team'])
     @stack('scripts')
 
     <script>

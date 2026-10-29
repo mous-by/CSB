@@ -31,6 +31,7 @@ use App\Models\User;
 use App\Services\Boutique\CartService;
 use App\Services\Users\SuperadminBootstrapper;
 use App\Support\SiteSettings;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
@@ -69,6 +70,14 @@ class AppServiceProvider extends ServiceProvider
 
         // D14 : 8 caractères au moins, lettres et chiffres.
         Password::defaults(fn () => Password::min(8)->letters()->numbers());
+
+        // Page qui suit la connexion : proposer d'installer l'application (partials.pwa-install) — le site pour un
+        // client, l'administration pour l'équipe.
+        Event::listen(Login::class, function (Login $event) {
+            if (in_array($event->guard, ['web', 'client'], true) && app()->bound('session.store')) {
+                session()->put('pwa_prompt', $event->guard === 'client' ? 'site' : 'team');
+            }
+        });
 
         // Proxy de confiance (config/site.php) : https et nom d'hôte du tunnel repris dans les adresses générées.
         if ($proxies = config('site.trusted_proxies')) {

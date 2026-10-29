@@ -36,7 +36,9 @@ body {
     font-size: 1rem;
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    /* « clip » et non « hidden » : avec html déjà en hidden, un body en hidden devient lui-même la zone de défilement
+       et l'en-tête collant (.site-header) part avec la page au téléphone. */
+    overflow-x: clip;
 }
 h1, h2, h3, h4, h5, h6 { color: var(--csb-ink); font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
 a { color: var(--csb-blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }

@@ -54,6 +54,11 @@ class TicketTest extends TestCase
         $this->assertNotNull($ticket->messages()->first()->attachment_path);
         Storage::disk('local')->assertExists($ticket->messages()->first()->attachment_path);
         Mail::assertSent(TicketForTeam::class, 2);
+        // Rendu réel des e-mails (la variable « $message » des vues d'e-mail est réservée par Laravel).
+        Mail::assertSent(TicketForTeam::class, fn (TicketForTeam $mail) => str_contains($mail->render(), 'erreur E000'));
+        // Accusé de réception au client, avec son message en rappel.
+        Mail::assertSent(TicketForClient::class, fn (TicketForClient $mail) => $mail->opened && $mail->hasTo($client->email) && $mail->reply?->body === 'Depuis ce matin, l\'imprimante affiche une erreur E000.');
+        $this->assertStringContainsString('bien reçue', (new TicketForClient($ticket, $ticket->messages()->first(), true))->envelope()->subject);
         $this->assertTrue(ActivityLog::where('action', 'tickets.opened')->exists());
 
         $this->get("/espace-client/tickets/{$ticket->id}")->assertOk()->assertSee('erreur E000')->assertSee('erreur.png');
@@ -83,7 +88,8 @@ class TicketTest extends TestCase
 
         $agent = User::factory()->commercial()->create();
         $this->actingAs($agent)->post("/admin/tickets/{$ticket->id}/messages", ['body' => 'Client difficile, rappeler demain.', 'internal' => '1'])->assertRedirect();
-        Mail::assertNotSent(TicketForClient::class);
+        // Seul l'accusé de réception de l'ouverture est parti : la note interne n'envoie rien au client.
+        Mail::assertNotSent(TicketForClient::class, fn (TicketForClient $mail) => ! $mail->opened);
 
         $note = $ticket->messages()->where('is_internal', true)->sole();
         $this->actingAs($owner, 'client')->get("/espace-client/tickets/{$ticket->id}")->assertOk()->assertDontSee('Client difficile');
@@ -106,7 +112,8 @@ class TicketTest extends TestCase
         $this->assertSame(TicketStatus::AttenteClient, $ticket->status);
         $this->assertFalse($ticket->awaiting_team);
         $this->assertSame($agent->id, $ticket->assigned_to, 'La première personne qui répond prend le ticket.');
-        Mail::assertSent(TicketForClient::class, fn ($mail) => $mail->hasTo($client->email));
+        Mail::assertSent(TicketForClient::class, fn (TicketForClient $mail) => ! $mail->opened && $mail->hasTo($client->email)
+            && str_contains($mail->render(), 'redémarrer l&#039;imprimante') && str_contains($mail->render(), 'vous a répondu'));
 
         $this->put("/admin/tickets/{$ticket->id}/statut", ['status' => 'resolu'])->assertRedirect();
         $this->assertSame(TicketStatus::Resolu, $ticket->fresh()->status);

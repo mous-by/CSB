@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Site\ActualiteController;
+use App\Http\Controllers\Site\AppManifestController;
 use App\Http\Controllers\Site\BoutiqueController;
 use App\Http\Controllers\Site\ConseillerController;
 use App\Http\Controllers\Site\DemandeController;
@@ -69,6 +70,9 @@ Route::name('site.')->group(function () {
     Route::get('/recherche/suggestions', [SearchController::class, 'suggest'])->middleware('throttle:120,1')->name('search.suggest');
     Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
     Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
+    // Applications installables (PWA) : site public et administration de l'équipe.
+    Route::get('/manifest.webmanifest', [AppManifestController::class, 'site'])->name('manifest');
+    Route::get('/manifest-equipe.webmanifest', [AppManifestController::class, 'team'])->name('manifest.team');
 });
 
 // Adresse inconnue : redirection d'une ancienne adresse de contenu (301), sinon 404 du site.

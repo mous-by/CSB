@@ -35,7 +35,10 @@
         <div class="card-body">
             <p class="text-muted small">Ne publiez un témoignage qu'avec l'accord de son auteur (cahier §4). Les clients peuvent aussi envoyer le leur, en vidéo ou par écrit, depuis la page <a href="{{ route('site.temoignages.create') }}" target="_blank" rel="noopener">« Partager mon expérience »</a> : il arrive masqué, à vérifier puis publier.</p>
             @if ($moderation)
-                <div class="alert alert-warning py-2"><i class='bx bx-bell me-1'></i>{{ $moderation }} témoignage(s) envoyé(s) par des clients attend(ent) votre validation.</div>
+                <div class="alert alert-warning py-2 d-flex flex-wrap align-items-center gap-2">
+                    <span><i class='bx bx-bell me-1'></i>{{ $moderation }} témoignage(s) envoyé(s) par des clients attend(ent) votre validation : regardez-le(s) puis cliquez sur <strong>« Valider »</strong>.</span>
+                    <button type="button" class="btn btn-warning btn-sm ms-auto" data-chip-target="a-moderer">Afficher seulement ceux à valider</button>
+                </div>
             @endif
             <div class="nv-chips mb-3" id="temoignages-filter">
                 <button type="button" class="nv-chip active" data-token="">Tous <b>{{ $temoignages->count() }}</b></button>
@@ -77,6 +80,12 @@
                                             <div class="fw-semibold">{{ $temoignage->author_name }}</div>
                                             <div class="small text-muted">{{ collect([$temoignage->author_title, $temoignage->organization])->filter()->implode(' — ') }}</div>
                                             @if ($temoignage->rating)<div class="small text-warning">{{ str_repeat('★', $temoignage->rating) }}{{ str_repeat('☆', 5 - $temoignage->rating) }}</div>@endif
+                                            {{-- Téléphone : les colonnes Statut et Actions sont hors de l'écran, « Valider » est repris ici. --}}
+                                            @if ($temoignage->awaitingModeration())
+                                                @can('update', $temoignage)
+                                                    <div class="d-lg-none mt-2">@include('admin._publish-button', ['action' => route('temoignages.publication', $temoignage), 'published' => false, 'label' => 'Valider'])</div>
+                                                @endcan
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -89,7 +98,12 @@
                                 <td>
                                     <span class="d-none">{{ $temoignage->is_published ? 'statut-on' : 'statut-off' }}{{ $temoignage->awaitingModeration() ? ' a-moderer' : '' }}{{ $temoignage->video_path || $temoignage->video_url ? ' avec-video' : '' }}</span>
                                     @if ($temoignage->awaitingModeration())
-                                        <span class="badge bg-warning-subtle">À modérer</span>
+                                        <div class="small fw-semibold mb-1" style="color: #b45309;">À modérer</div>
+                                        @can('update', $temoignage)
+                                            @include('admin._publish-button', ['action' => route('temoignages.publication', $temoignage), 'published' => false, 'label' => 'Valider'])
+                                        @else
+                                            <span class="badge bg-warning-subtle">En attente</span>
+                                        @endcan
                                     @elseif ($temoignage->is_published)
                                         <span class="badge bg-success-subtle">Publié</span>
                                     @else
@@ -99,6 +113,9 @@
                                 </td>
                                 <td class="d-flex gap-1">
                                     @can('update', $temoignage)
+                                        @unless ($temoignage->awaitingModeration())
+                                            @include('admin._publish-button', ['action' => route('temoignages.publication', $temoignage), 'published' => $temoignage->is_published, 'label' => 'Publier', 'hideLabel' => 'Masquer'])
+                                        @endunless
                                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#edit-temoignages-{{ $temoignage->id }}" title="Modifier"><i class='bx bx-edit'></i></button>
                                     @endcan
                                     @can('delete', $temoignage)
@@ -136,6 +153,9 @@
                 temoignagesTable.column(3).search(chip.dataset.token || '', false, true).draw();
             });
         });
+        document.querySelectorAll('[data-chip-target]').forEach((button) => button.addEventListener('click', () => {
+            document.querySelector(`#temoignages-filter .nv-chip[data-token="${button.dataset.chipTarget}"]`).click();
+        }));
         @if ($errors->any())
             (function () {
                 const id = @json(old('temoignage_id') ? 'edit-temoignages-'.old('temoignage_id') : 'create-temoignages');

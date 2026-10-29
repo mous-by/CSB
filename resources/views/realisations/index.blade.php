@@ -59,6 +59,12 @@
                                         <div>
                                             <div class="fw-semibold">{{ $realisation->title }}</div>
                                             <div class="small text-muted">{{ \Illuminate\Support\Str::limit($realisation->summary, 90) }}</div>
+                                            {{-- Téléphone : la colonne Actions est hors de l'écran, « Publier » est repris ici. --}}
+                                            @if (! $realisation->is_published)
+                                                @can('publish', $realisation)
+                                                    <div class="d-lg-none mt-2">@include('admin._publish-button', ['action' => route('realisations.publication', $realisation), 'published' => false, 'label' => 'Publier'])</div>
+                                                @endcan
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -77,10 +83,7 @@
                                         <a href="{{ route('realisations.edit', $realisation) }}" class="btn btn-primary btn-sm" title="Modifier"><i class='bx bx-edit'></i></a>
                                     @endcan
                                     @can('publish', $realisation)
-                                        <form method="POST" action="{{ route('realisations.publication', $realisation) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-primary btn-sm" title="{{ $realisation->is_published ? 'Dépublier' : 'Publier' }}"><i class='bx {{ $realisation->is_published ? 'bx-hide' : 'bx-globe' }}'></i></button>
-                                        </form>
+                                        @include('admin._publish-button', ['action' => route('realisations.publication', $realisation), 'published' => $realisation->is_published, 'label' => 'Publier'])
                                     @endcan
                                     @can('delete', $realisation)
                                         <form method="POST" action="{{ route('realisations.destroy', $realisation) }}" class="js-confirm-delete" data-title="Supprimer cette réalisation ?" data-name="{{ $realisation->title }}">

@@ -69,6 +69,12 @@
                                         <div>
                                             <div class="fw-semibold">{{ $logiciel->name }} @if ($logiciel->is_featured)<i class='bx bxs-star text-warning' title="Logiciel phare"></i>@endif</div>
                                             <div class="small text-muted">{{ \Illuminate\Support\Str::limit($logiciel->summary, 90) }}</div>
+                                            {{-- Téléphone : la colonne Actions est hors de l'écran, « Publier » est repris ici. --}}
+                                            @if (! $logiciel->is_published)
+                                                @can('publish', $logiciel)
+                                                    <div class="d-lg-none mt-2">@include('admin._publish-button', ['action' => route('logiciels.publication', $logiciel), 'published' => false, 'label' => 'Publier'])</div>
+                                                @endcan
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -89,10 +95,7 @@
                                         <a href="{{ route('logiciels.edit', $logiciel) }}" class="btn btn-primary btn-sm" title="Modifier"><i class='bx bx-edit'></i></a>
                                     @endcan
                                     @can('publish', $logiciel)
-                                        <form method="POST" action="{{ route('logiciels.publication', $logiciel) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-primary btn-sm" title="{{ $logiciel->is_published ? 'Dépublier' : 'Publier' }}"><i class='bx {{ $logiciel->is_published ? 'bx-hide' : 'bx-globe' }}'></i></button>
-                                        </form>
+                                        @include('admin._publish-button', ['action' => route('logiciels.publication', $logiciel), 'published' => $logiciel->is_published, 'label' => 'Publier'])
                                     @endcan
                                     @can('delete', $logiciel)
                                         <form method="POST" action="{{ route('logiciels.destroy', $logiciel) }}" class="js-confirm-delete" data-title="Supprimer ce logiciel ?" data-name="{{ $logiciel->name }}">

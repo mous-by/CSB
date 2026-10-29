@@ -5,6 +5,7 @@ namespace Tests\Feature\Demandes;
 use App\Enums\DemandeStatus;
 use App\Enums\DemandeType;
 use App\Enums\LogicielStatus;
+use App\Mail\DemandeAccuse;
 use App\Mail\NouvelleDemande;
 use App\Models\ActivityLog;
 use App\Models\Demande;
@@ -56,9 +57,27 @@ class DemandeFormsTest extends TestCase
         $this->assertNotNull($demande->consent_at);
         $this->assertNotNull($demande->notified_at);
         Mail::assertSent(NouvelleDemande::class, fn ($mail) => $mail->hasTo('equipe@csb.test') && $mail->demande->is($demande));
+        Mail::assertNotSent(DemandeAccuse::class); // pas d'e-mail laissé : pas d'accusé de réception
         $this->assertTrue(ActivityLog::where('action', 'demandes.received')->exists());
 
         $this->get('/contact')->assertSee('Message envoyé');
+    }
+
+    public function test_the_visitor_who_left_an_email_receives_an_acknowledgment(): void
+    {
+        $this->postJson('/contact', $this->human([
+            'name' => 'Awa Traoré', 'email' => 'awa@exemple.ml', 'subject' => 'Maintenance du parc', 'message' => 'Nos imprimantes sont en panne.',
+        ]))->assertOk();
+
+        $demande = Demande::firstOrFail();
+        Mail::assertSent(DemandeAccuse::class, function (DemandeAccuse $mail) use ($demande) {
+            $html = $mail->render();
+
+            return $mail->hasTo('awa@exemple.ml') && $mail->hasReplyTo('equipe@csb.test') && $mail->demande->is($demande)
+                && str_contains($mail->envelope()->subject, $demande->reference())
+                && str_contains($html, 'Bonjour Awa Traoré') && str_contains($html, 'votre message') && str_contains($html, 'Maintenance du parc');
+        });
+        Mail::assertSent(NouvelleDemande::class, 1);
     }
 
     public function test_the_ajax_submission_returns_json_and_validation_errors(): void
@@ -148,5 +167,6 @@ class DemandeFormsTest extends TestCase
         $this->assertNull($demande->notified_at);
         $this->assertStringContainsString('SMTP injoignable', $demande->notification_error);
         $this->assertTrue(ActivityLog::where('action', 'demandes.notification_failed')->exists());
+        $this->assertTrue(ActivityLog::where('action', 'demandes.acknowledgment_failed')->exists());
     }
 }

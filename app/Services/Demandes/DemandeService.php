@@ -4,6 +4,7 @@ namespace App\Services\Demandes;
 
 use App\Enums\DemandeStatus;
 use App\Enums\DemandeType;
+use App\Mail\DemandeAccuse;
 use App\Mail\NouvelleDemande;
 use App\Models\Demande;
 use App\Models\DemandeNote;
@@ -85,6 +86,7 @@ class DemandeService
         }
 
         $this->notify($demande);
+        $this->acknowledge($demande);
         app(WhatsAppNotifier::class)->alert('demandes', "Nouvelle demande ({$type->label()}) de {$demande->name}".($demande->phone ? " — {$demande->phone}" : '').($demande->subject_label ? " — {$demande->subject_label}" : ''));
 
         return $demande;
@@ -111,6 +113,22 @@ class DemandeService
             $this->logger->log('demandes.notification_failed', 'demandes', "Échec de la notification e-mail — {$demande->reference()}", $demande, new: ['error' => $message]);
 
             return false;
+        }
+    }
+
+    /** Accusé de réception au visiteur qui a laissé son e-mail ; un échec est journalisé, jamais propagé. */
+    public function acknowledge(Demande $demande): void
+    {
+        if (! $demande->email) {
+            return;
+        }
+
+        try {
+            Mail::to($demande->email, $demande->name)->send(new DemandeAccuse($demande));
+        } catch (Throwable $e) {
+            $message = Str::limit($e->getMessage(), 480);
+            Log::error("Accusé de réception de la demande {$demande->reference()} impossible : {$message}");
+            $this->logger->log('demandes.acknowledgment_failed', 'demandes', "Échec de l'accusé de réception au visiteur — {$demande->reference()}", $demande, new: ['error' => $message]);
         }
     }
 

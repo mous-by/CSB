@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\Admin\TemoignageRequest;
 use App\Models\Temoignage;
+use App\Services\Contenus\ContentPublisher;
 use App\Services\Temoignages\TemoignageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -37,6 +38,21 @@ class TemoignageController extends Controller
         $this->service->save($temoignage, $request->validated(), $request->file('photo_upload'), $request->user());
 
         return redirect()->route('temoignages.index')->with('status', "Témoignage de {$temoignage->author_name} modifié.".($temoignage->fresh()->video_status === Temoignage::VIDEO_PROCESSING ? ' La vidéo est en cours de préparation (quelques minutes).' : ''));
+    }
+
+    /** « Valider » (témoignage à modérer) ou « Publier » / « Masquer » en un clic depuis la liste, journalisé. */
+    public function publication(Temoignage $temoignage, ContentPublisher $publisher): RedirectResponse
+    {
+        Gate::authorize('update', $temoignage);
+
+        $moderated = $temoignage->awaitingModeration();
+        $publisher->toggle($temoignage, 'temoignages');
+
+        return redirect()->route('temoignages.index')->with('status', "Témoignage de {$temoignage->author_name} ".match (true) {
+            $moderated => 'validé : il est maintenant publié sur le site.',
+            $temoignage->is_published => 'publié.',
+            default => 'masqué.',
+        });
     }
 
     public function destroy(Temoignage $temoignage): RedirectResponse

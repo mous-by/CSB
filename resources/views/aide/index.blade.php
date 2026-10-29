@@ -48,7 +48,7 @@
                 'Logiciels → « Ajouter » : nom, résumé, catégorie (secteur), statut, plateformes, fonctionnalités (une par ligne), captures et logo.',
                 'N\'annoncez que les fonctionnalités et plateformes réellement disponibles ; le statut (Disponible, Sur demande, En développement) doit correspondre à l\'état réel.',
                 'Cochez « Publié » pour l\'afficher sur le site, « Logiciel phare » pour le mettre en avant sur l\'accueil. « Archivé » le retire du catalogue tout en gardant sa page.',
-                'Le bouton globe / œil barré de la liste publie ou dépublie en un clic. « Catégories » gère les secteurs du catalogue.',
+                'Le bouton vert « Publier » de la liste met en ligne en un clic (au téléphone, il est aussi sous le titre) ; l\'œil barré dépublie. Même chose pour le matériel, les réalisations et les actualités. « Catégories » gère les secteurs du catalogue.',
             ]],
             ['bx bx-laptop', 'Gérer le matériel', [
                 'Matériel → « Ajouter » : désignation, catégorie, marque et modèle, caractéristiques (« Libellé : valeur », une par ligne), état (neuf, occasion, reconditionné).',
@@ -95,7 +95,7 @@
             ['bx bx-video', 'Témoignages en vidéo', [
                 'Témoignages → « Ajouter » : nom, fonction, organisation, note, texte, photo, et une vidéo (envoyée depuis votre ordinateur ou téléphone, 300 Mo au plus) ou un lien YouTube / Facebook / TikTok.',
                 'La vidéo envoyée est convertie en quelques minutes (format lisible sur tous les téléphones, image d\'aperçu, durée) : « Préparation… » s\'affiche en attendant.',
-                'Vos clients peuvent envoyer eux-mêmes leur témoignage depuis la page « Partager mon expérience » du site : il arrive « À modérer » (pastille, cloche, e-mail, WhatsApp). Regardez-le, puis cochez « Publié ». Leur téléphone ou e-mail n\'est jamais publié.',
+                'Vos clients peuvent envoyer eux-mêmes leur témoignage depuis la page « Partager mon expérience » du site : il arrive « À modérer » (pastille, cloche, e-mail, WhatsApp). Regardez-le, puis cliquez sur le bouton vert « Valider » (au téléphone : sous le nom de l\'auteur) : il est publié aussitôt. La pastille « À modérer » n\'affiche que ceux qui attendent. Leur téléphone ou e-mail n\'est jamais publié.',
                 '« Mis en avant » place un témoignage en premier sur le site et l\'accueil.',
             ]],
             ['bx bx-support', 'Espace client et tickets', [

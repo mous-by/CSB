@@ -62,6 +62,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="{{ route('profile.show') }}"><i class="bx bx-user"></i><span>Profil</span></a></li>
+                    <li data-pwa-open hidden><a class="dropdown-item" href="#pwa-install"><i class="bx bx-download"></i><span>Installer l'application</span></a></li>
                     <li><div class="dropdown-divider mb-0"></div></li>
                     <li>
                         <a class="dropdown-item" href="{{ route('logout') }}"

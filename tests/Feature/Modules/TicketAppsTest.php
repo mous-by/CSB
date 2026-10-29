@@ -90,6 +90,9 @@ class TicketAppsTest extends TestCase
         $this->assertSame('KalanNet', $ticket->source_app);
         $this->assertSame('Awa Traoré', $ticket->requesterName());
         Mail::assertSent(TicketForTeam::class);
+        // Accusé de réception au demandeur, sans lien vers un espace client : il suit son ticket depuis KalanNet.
+        Mail::assertSent(TicketForClient::class, fn (TicketForClient $mail) => $mail->opened && $mail->hasTo('awa@example.com')
+            && str_contains($mail->render(), 'Assistance CSB') && ! str_contains($mail->render(), 'Suivre ma demande'));
         // Push : seulement les membres qui voient les tickets (le gestionnaire n'a pas tickets.view par défaut).
         Bus::assertDispatchedTimes(SendPushNotification::class, 1);
         $this->assertTrue(ActivityLog::where('action', 'tickets.opened')->where('channel', 'api')->exists());
@@ -99,7 +102,7 @@ class TicketAppsTest extends TestCase
         $this->get("/admin/tickets/{$ticket->id}")->assertOk()->assertSee('Via KalanNet')->assertSee('École Kalan');
         $this->post("/admin/tickets/{$ticket->id}/messages", ['body' => 'Mettez à jour le navigateur puis réessayez.', 'status' => 'attente_client'])->assertRedirect();
         $this->post("/admin/tickets/{$ticket->id}/messages", ['body' => 'Note : problème connu sur Chrome 140.', 'internal' => '1'])->assertRedirect();
-        Mail::assertSent(TicketForClient::class, fn ($mail) => $mail->hasTo('awa@example.com'));
+        Mail::assertSent(TicketForClient::class, fn ($mail) => ! $mail->opened && $mail->hasTo('awa@example.com'));
 
         $thread = $this->withToken($app)->getJson("/api/v1/tickets/{$number}?reporter_ref=42")->assertOk()
             ->assertJsonPath('data.status', 'attente_client')->assertJsonPath('data.awaiting_reporter', true)->json('data.messages');

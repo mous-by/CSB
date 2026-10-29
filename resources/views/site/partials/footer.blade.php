@@ -83,6 +83,7 @@
                 @if (Route::has('site.sitemap'))
                     <a href="{{ route('site.sitemap') }}">Plan du site</a>
                 @endif
+                <a href="#pwa-install" data-pwa-open hidden><i class='bx bx-download' aria-hidden="true"></i> Installer l'application</a>
             </nav>
         </div>
     </div>

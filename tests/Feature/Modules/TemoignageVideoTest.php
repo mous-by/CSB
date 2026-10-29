@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Modules;
 
+use App\Mail\TemoignageMerci;
 use App\Mail\TemoignageRecu;
 use App\Models\ActivityLog;
 use App\Models\Temoignage;
@@ -78,6 +79,7 @@ class TemoignageVideoTest extends TestCase
         $this->assertStringEndsWith('.mp4', $temoignage->video_path);
         $this->assertSame(83, $temoignage->video_duration);
         Mail::assertSent(TemoignageRecu::class, fn ($m) => $m->hasTo('equipe@csb.test'));
+        Mail::assertNotSent(TemoignageMerci::class); // contact = téléphone : pas d'e-mail de remerciement
         $this->assertTrue(ActivityLog::where('action', 'temoignages.submitted')->exists());
 
         // Pas publié tant que l'équipe ne l'a pas validé.
@@ -95,8 +97,34 @@ class TemoignageVideoTest extends TestCase
         $this->post('/temoignages/partager', ['author_name' => 'Oumar', 'contact' => '', 'content' => ''] + $human)->assertSessionHasErrors(['contact', 'content', 'consent']);
         $this->post('/temoignages/partager', ['author_name' => 'Oumar Traoré', 'contact' => 'oumar@exemple.ml', 'content' => 'Très bon service, rapide et sérieux.', 'consent' => '1'] + $human)->assertSessionHasNoErrors();
 
+        // Contact = e-mail : l'auteur est remercié (publication après relecture).
+        Mail::assertSent(TemoignageMerci::class, fn (TemoignageMerci $m) => $m->hasTo('oumar@exemple.ml') && str_contains($m->render(), 'relit votre témoignage'));
+
         Temoignage::sole()->update(['is_published' => true]);
         $this->get('/temoignages')->assertSee('Très bon service')->assertDontSee('oumar@exemple.ml');
+    }
+
+    public function test_a_testimonial_to_moderate_is_validated_in_one_click(): void
+    {
+        $this->syncPermissions();
+        $temoignage = Temoignage::create(['author_name' => 'Kadiatou Sow', 'contact' => '70 00 00 00', 'content' => 'Service rapide.', 'source' => 'client', 'consent_at' => now(), 'is_published' => false, 'sort_order' => 0]);
+        $this->assertTrue($temoignage->awaitingModeration());
+
+        // Lecture seule (communication) : ni bouton ni validation.
+        $this->actingAs(User::factory()->communication()->create())->get('/admin/temoignages')->assertOk()->assertDontSee('<span>Valider</span></button>', false);
+        $this->post("/admin/temoignages/{$temoignage->id}/publication")->assertForbidden();
+
+        $this->actingAs(User::factory()->gestionnaire()->create())->get('/admin/temoignages')->assertOk()
+            ->assertSee('<span>Valider</span></button>', false)->assertSee('Afficher seulement ceux à valider');
+        $this->post("/admin/temoignages/{$temoignage->id}/publication")->assertRedirect('/admin/temoignages')->assertSessionHas('status', fn ($s) => str_contains($s, 'validé'));
+
+        $this->assertTrue($temoignage->fresh()->is_published);
+        $this->assertTrue(ActivityLog::where('action', 'temoignages.published')->exists());
+        $this->get('/temoignages')->assertSee('Kadiatou Sow');
+
+        // Un second clic le masque.
+        $this->post("/admin/temoignages/{$temoignage->id}/publication")->assertSessionHas('status', fn ($s) => str_contains($s, 'masqué'));
+        $this->assertFalse($temoignage->fresh()->is_published);
     }
 
     public function test_a_non_video_file_is_refused_and_chunks_must_arrive_in_order(): void

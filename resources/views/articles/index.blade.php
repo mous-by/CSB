@@ -61,6 +61,12 @@
                                         <div>
                                             <div class="fw-semibold">{{ $article->title }}</div>
                                             <div class="small text-muted">{{ \Illuminate\Support\Str::limit($article->excerptText(), 90) }}</div>
+                                            {{-- Téléphone : la colonne Actions est hors de l'écran, « Publier » est repris ici. --}}
+                                            @if (! $article->is_published)
+                                                @can('publish', $article)
+                                                    <div class="d-lg-none mt-2">@include('admin._publish-button', ['action' => route('articles.publication', $article), 'published' => false, 'label' => 'Publier'])</div>
+                                                @endcan
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -82,10 +88,7 @@
                                         <a href="{{ route('articles.edit', $article) }}" class="btn btn-primary btn-sm" title="Modifier"><i class='bx bx-edit'></i></a>
                                     @endcan
                                     @can('publish', $article)
-                                        <form method="POST" action="{{ route('articles.publication', $article) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-primary btn-sm" title="{{ $article->is_published ? 'Dépublier' : 'Publier' }}"><i class='bx {{ $article->is_published ? 'bx-hide' : 'bx-globe' }}'></i></button>
-                                        </form>
+                                        @include('admin._publish-button', ['action' => route('articles.publication', $article), 'published' => $article->is_published, 'label' => 'Publier'])
                                     @endcan
                                     @can('abonnes.send')
                                         @if ($article->isVisible() && ! $article->newsletter_sent_at)

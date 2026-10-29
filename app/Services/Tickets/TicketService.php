@@ -52,6 +52,7 @@ class TicketService
         });
 
         $this->announce($ticket);
+        $this->notifyClient($ticket, $ticket->messages()->first(), opened: true);
 
         return $ticket;
     }
@@ -80,6 +81,7 @@ class TicketService
         });
 
         $this->announce($ticket);
+        $this->notifyClient($ticket, $ticket->messages()->first(), opened: true);
 
         return $ticket;
     }
@@ -206,13 +208,13 @@ class TicketService
         $this->send(fn () => Mail::to($recipient)->send(new TicketForTeam($ticket->fresh(['client', 'messages']), $event)), $ticket);
     }
 
-    private function notifyClient(Ticket $ticket, ?TicketMessage $message): void
+    private function notifyClient(Ticket $ticket, ?TicketMessage $message, bool $opened = false): void
     {
         $email = $ticket->requesterEmail();
         if (! $email) {
             return;
         }
-        $this->send(fn () => Mail::to($email)->send(new TicketForClient($ticket->fresh('client'), $message)), $ticket);
+        $this->send(fn () => Mail::to($email)->send(new TicketForClient($ticket->fresh('client'), $message, $opened)), $ticket);
     }
 
     private function send(callable $sender, Ticket $ticket): void

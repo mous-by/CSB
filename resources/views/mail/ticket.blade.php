@@ -1,4 +1,4 @@
-{{-- Notification d'un ticket (équipe ou demandeur). $ticket, $message (ou null), $intro, $url (ou null), $button, $outro (facultatif). --}}
+{{-- Notification d'un ticket (équipe ou demandeur). $ticket, $ticketMessage (ou null ; jamais « $message », réservé par Laravel aux e-mails), $intro, $url (ou null), $button, $outro (facultatif). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="utf-8"><title>{{ $ticket->number }}</title></head>
@@ -10,8 +10,8 @@
         </td></tr>
         <tr><td style="padding:24px;font-size:15px;line-height:1.6">
             <p style="margin-top:0">{{ $intro }}</p>
-            @if ($message)
-                <div style="padding:14px;background:#f5f7fb;border-left:4px solid #f58220;border-radius:6px">{!! nl2br(e($message->body)) !!}</div>
+            @if ($ticketMessage)
+                <div style="padding:14px;background:#f5f7fb;border-left:4px solid #f58220;border-radius:6px">{!! nl2br(e($ticketMessage->body)) !!}</div>
             @endif
             @if ($url)
                 <p style="margin:24px 0 0"><a href="{{ $url }}" style="display:inline-block;background:#f58220;color:#1b1203;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px">{{ $button }}</a></p>

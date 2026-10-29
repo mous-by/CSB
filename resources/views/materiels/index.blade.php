@@ -80,6 +80,12 @@
                                         <div>
                                             <div class="fw-semibold">{{ $materiel->designation }} @if ($materiel->is_featured)<i class='bx bxs-star text-warning' title="Mis en avant"></i>@endif</div>
                                             <div class="small text-muted">{{ $materiel->brandModel() ?? '—' }} · {{ $materiel->is_published ? 'publié' : 'non publié' }}</div>
+                                            {{-- Téléphone : la colonne Actions est hors de l'écran, « Publier » est repris ici. --}}
+                                            @if (! $materiel->is_published)
+                                                @can('publish', $materiel)
+                                                    <div class="d-lg-none mt-2">@include('admin._publish-button', ['action' => route('materiels.publication', $materiel), 'published' => false, 'label' => 'Publier'])</div>
+                                                @endcan
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -105,10 +111,7 @@
                                         <a href="{{ route('materiels.create', ['modele' => $materiel->id]) }}" class="btn btn-outline-primary btn-sm" title="Dupliquer : nouvelle fiche pré-remplie"><i class='bx bx-copy'></i></a>
                                     @endcan
                                     @can('publish', $materiel)
-                                        <form method="POST" action="{{ route('materiels.publication', $materiel) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-primary btn-sm" title="{{ $materiel->is_published ? 'Dépublier' : 'Publier' }}"><i class='bx {{ $materiel->is_published ? 'bx-hide' : 'bx-globe' }}'></i></button>
-                                        </form>
+                                        @include('admin._publish-button', ['action' => route('materiels.publication', $materiel), 'published' => $materiel->is_published, 'label' => 'Publier'])
                                     @endcan
                                     @can('delete', $materiel)
                                         <form method="POST" action="{{ route('materiels.destroy', $materiel) }}" class="js-confirm-delete" data-title="Supprimer ce matériel ?" data-name="{{ $materiel->designation }}">
