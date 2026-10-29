@@ -66,11 +66,7 @@ class TestimonialVideoService
         $source = $disk->path($temoignage->video_path);
 
         if (! $this->ffmpegAvailable()) {
-            $playable = in_array(pathinfo($source, PATHINFO_EXTENSION), ['mp4', 'webm', 'm4v'], true);
-            $temoignage->forceFill([
-                'video_status' => $playable ? Temoignage::VIDEO_READY : Temoignage::VIDEO_FAILED,
-                'video_error' => $playable ? null : 'Format non lisible par tous les navigateurs et ffmpeg absent du serveur : envoyez un MP4.',
-            ])->saveQuietly();
+            $this->publishWithoutConversion($temoignage, $source);
 
             return;
         }
@@ -102,6 +98,70 @@ class TestimonialVideoService
             'video_duration' => $probe->successful() && is_numeric(trim($probe->output())) ? (int) round((float) trim($probe->output())) : null,
             'video_status' => Temoignage::VIDEO_READY, 'video_error' => null,
         ])->saveQuietly();
+    }
+
+    /**
+     * Sans ffmpeg (hébergement mutualisé) : rien n'est converti. Un MP4 ou un QuickTime (.mov, .3gp) en H.264 est lu par
+     * tous les navigateurs — un .mov est alors simplement renommé en .mp4, c'est le même conteneur ; un WebM aussi.
+     * Le HEVC (iPhone réglé sur « Haute efficacité ») et les autres formats sont refusés avec une explication.
+     */
+    private function publishWithoutConversion(Temoignage $temoignage, string $source): void
+    {
+        $disk = Storage::disk('public');
+        $extension = strtolower(pathinfo($source, PATHINFO_EXTENSION));
+        $codec = in_array($extension, ['mp4', 'm4v', 'mov', '3gp'], true) ? $this->videoCodec($source) : null;
+        $playable = $extension === 'webm' || $codec === 'h264' || ($codec === null && in_array($extension, ['mp4', 'm4v'], true));
+
+        if (! $playable) {
+            $temoignage->forceFill(['video_status' => Temoignage::VIDEO_FAILED, 'video_error' => $codec === 'hevc'
+                ? 'Vidéo en HEVC (iPhone réglé sur « Haute efficacité ») : tous les navigateurs ne la lisent pas, et ffmpeg, qui la convertirait, est absent du serveur. Téléchargez-la, convertissez-la en MP4 (H.264), puis remplacez-la ; ou réglez l\'iPhone sur « Le plus compatible ».'
+                : 'Format non lisible par tous les navigateurs et ffmpeg absent du serveur : envoyez une vidéo MP4 (H.264).',
+            ])->saveQuietly();
+
+            return;
+        }
+
+        $path = $temoignage->video_path;
+        if (in_array($extension, ['mov', '3gp'], true)) {
+            $path = preg_replace('/\.\w+$/', '.mp4', $path);
+            $disk->move($temoignage->video_path, $path);
+        }
+        $temoignage->forceFill(['video_path' => $path, 'video_status' => Temoignage::VIDEO_READY, 'video_error' => null])->saveQuietly();
+    }
+
+    /**
+     * Codec vidéo lu dans le fichier MP4 / QuickTime sans ffmpeg : type de l'entrée de la boîte « stsd » (avc1 = H.264,
+     * hvc1 / hev1 = HEVC). Lecture par morceaux (fichiers jusqu'à 300 Mo). @return 'h264'|'hevc'|null
+     */
+    public function videoCodec(string $file): ?string
+    {
+        $handle = @fopen($file, 'rb');
+        if (! $handle) {
+            return null;
+        }
+        $found = null;
+        $tail = '';
+        while ($found !== 'h264' && ! feof($handle)) {
+            $buffer = $tail.fread($handle, 1048576);
+            $offset = 0;
+            while (($at = strpos($buffer, 'stsd', $offset)) !== false) {
+                // stsd : version/drapeaux (4), nombre d'entrées (4), puis taille (4) et type (4) de la première entrée.
+                $type = substr($buffer, $at + 16, 4);
+                if (strlen($type) < 4) {
+                    break;
+                }
+                $found = match ($type) {
+                    'avc1', 'avc3' => 'h264',
+                    'hvc1', 'hev1' => $found ?? 'hevc',
+                    default => $found,
+                };
+                $offset = $at + 4;
+            }
+            $tail = substr($buffer, -24);
+        }
+        fclose($handle);
+
+        return $found;
     }
 
     private function deleteFiles(Temoignage $temoignage): void

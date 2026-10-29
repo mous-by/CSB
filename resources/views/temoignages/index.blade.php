@@ -65,8 +65,11 @@
                                         @elseif ($temoignage->video_status === \App\Models\Temoignage::VIDEO_PROCESSING)
                                             <span class="badge bg-info-subtle"><i class='bx bx-loader-alt bx-spin me-1'></i>Préparation…</span>
                                         @else
-                                            <span class="badge bg-danger-subtle" title="{{ $temoignage->video_error }}">Vidéo illisible</span>
+                                            <span class="badge bg-danger-subtle" title="{{ $temoignage->video_error }}">Pas sur le site</span>
                                         @endif
+                                        @unless ($temoignage->video_status === \App\Models\Temoignage::VIDEO_READY)
+                                            <a href="{{ $temoignage->fileUrl() }}" target="_blank" rel="noopener" class="d-block small mt-1"><i class='bx bx-play-circle me-1'></i>Ouvrir la vidéo</a>
+                                        @endunless
                                     @elseif ($temoignage->video_url)
                                         <a href="{{ $temoignage->video_url }}" target="_blank" rel="noopener" class="small"><i class='bx bx-link-external me-1'></i>{{ $temoignage->videoPlatform() }}</a>
                                     @else

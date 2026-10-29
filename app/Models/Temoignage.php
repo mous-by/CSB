@@ -68,6 +68,12 @@ class Temoignage extends Model
         return $this->hasVideo() ? asset('storage/'.$this->video_path) : null;
     }
 
+    /** Fichier envoyé, quel que soit son état : l'équipe peut toujours le regarder ou le télécharger (administration). */
+    public function fileUrl(): ?string
+    {
+        return $this->video_path ? asset('storage/'.$this->video_path) : null;
+    }
+
     public function posterUrl(): ?string
     {
         return $this->video_poster_path ? asset('storage/'.$this->video_poster_path) : $this->photo?->url();

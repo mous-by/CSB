@@ -63,13 +63,19 @@
                         @if ($item?->video_path)
                             <div class="col-12">
                                 <div class="d-flex flex-wrap align-items-center gap-3 p-2 border rounded">
-                                    @if ($item->hasVideo())
-                                        <video src="{{ $item->videoUrl() }}" @if ($item->posterUrl()) poster="{{ $item->posterUrl() }}" @endif controls preload="none" playsinline style="width: 220px; border-radius: 8px; background: #000"></video>
-                                    @elseif ($item->video_status === \App\Models\Temoignage::VIDEO_PROCESSING)
-                                        <span class="badge bg-info-subtle"><i class='bx bx-loader-alt bx-spin me-1'></i>Vidéo en préparation…</span>
-                                    @else
-                                        <span class="badge bg-danger-subtle">Vidéo illisible : {{ \Illuminate\Support\Str::limit((string) $item->video_error, 120) }}</span>
-                                    @endif
+                                    {{-- Toujours visible par l'équipe, même en préparation ou « illisible » (le navigateur la lit souvent quand même). --}}
+                                    <video src="{{ $item->fileUrl() }}#t=1" @if ($item->posterUrl()) poster="{{ $item->posterUrl() }}" @endif controls preload="metadata" playsinline style="width: 260px; max-width: 100%; border-radius: 8px; background: #000"></video>
+                                    <div class="small">
+                                        @if ($item->hasVideo())
+                                            <span class="badge bg-success-subtle">Prête : visible sur le site</span>
+                                        @elseif ($item->video_status === \App\Models\Temoignage::VIDEO_PROCESSING)
+                                            <span class="badge bg-info-subtle"><i class='bx bx-loader-alt bx-spin me-1'></i>En préparation : pas encore sur le site</span>
+                                        @else
+                                            <span class="badge bg-danger-subtle">Pas affichée sur le site</span>
+                                            <div class="text-danger mt-1" style="max-width: 320px; white-space: normal;">{{ $item->video_error }}</div>
+                                        @endif
+                                        <div class="mt-1"><a href="{{ $item->fileUrl() }}" target="_blank" rel="noopener" download><i class='bx bx-download me-1'></i>Télécharger la vidéo</a></div>
+                                    </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" value="1" id="remove_video{{ $sfx }}" name="remove_video">
                                         <label class="form-check-label" for="remove_video{{ $sfx }}">Retirer cette vidéo</label>

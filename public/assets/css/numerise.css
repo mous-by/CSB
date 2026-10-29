@@ -941,6 +941,12 @@ html.semi-bleu .topbar {
 .modal-footer .btn { min-width: 6.5rem; }
 .modal-footer { gap: .5rem; }
 
+/* Modale à défilement interne dont un <form> entoure le corps et le pied : Bootstrap ne fait défiler .modal-body que
+   s'il est enfant direct de .modal-content. Le formulaire reprend la colonne flexible : le corps défile, en-tête et
+   bouton « Enregistrer » restent visibles (sinon le bas de la modale était inaccessible). */
+.modal-dialog-scrollable .modal-content > form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; max-height: 100%; overflow: hidden; }
+.modal-dialog-scrollable .modal-content > form > .modal-body { overflow-y: auto; min-height: 0; }
+
 /* Aperçu du logo de la carte VGT dans les réglages des mairies */
 .nv-logo-preview { width: 4.2rem; height: 4.2rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: .35rem; background: #fff; border: 1px dashed rgba(15, 23, 42, .25); border-radius: 14px; overflow: hidden; }
 .nv-logo-preview img, .nv-logo-preview svg { max-width: 100%; max-height: 100%; width: auto; height: 100%; object-fit: contain; }

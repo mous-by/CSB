@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\Temoignage;
 use App\Models\User;
 use App\Services\Videos\ChunkedVideoUpload;
+use App\Services\Videos\TestimonialVideoService;
 use App\Support\SpamGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -146,6 +147,37 @@ class TemoignageVideoTest extends TestCase
             ->assertSee('data-video-play="https://computerservicebarry.com/storage/temoignages/videos/pi.mp4"', false)
             ->assertSee('class="vt-frame"', false) // pas d'image d'aperçu : l'image de la vidéo sert d'aperçu
             ->assertDontSee('http://localhost/storage', false);
+    }
+
+    public function test_without_ffmpeg_an_h264_mov_is_renamed_mp4_and_hevc_is_refused_but_still_watchable_by_the_team(): void
+    {
+        $this->syncPermissions();
+        Storage::fake('public');
+        Process::fake(['*' => Process::result(exitCode: 127)]);
+        $service = app(TestimonialVideoService::class);
+        $make = fn (string $name, string $path) => Temoignage::create(['author_name' => $name, 'content' => 'Bien.', 'source' => 'client', 'contact' => 'x', 'consent_at' => now(),
+            'is_published' => false, 'sort_order' => 0, 'video_path' => $path, 'video_status' => Temoignage::VIDEO_PROCESSING]);
+
+        // .mov d'un téléphone en H.264 : même conteneur qu'un MP4, renommé et publié tel quel.
+        Storage::disk('public')->put('temoignages/videos/a.mov', $this->fixture());
+        $h264 = $make('Awa', 'temoignages/videos/a.mov');
+        $service->process($h264);
+        $h264->refresh();
+        $this->assertSame(Temoignage::VIDEO_READY, $h264->video_status);
+        $this->assertSame('temoignages/videos/a.mp4', $h264->video_path);
+        Storage::disk('public')->assertExists('temoignages/videos/a.mp4');
+        Storage::disk('public')->assertMissing('temoignages/videos/a.mov');
+
+        // .mov en HEVC (iPhone « Haute efficacité ») : refusé avec une explication, mais l'équipe peut le regarder.
+        Storage::disk('public')->put('temoignages/videos/b.mov', "\0\0\0\x20ftypqt  ".str_repeat("\0", 16)."\0\0\0\x40stsd\0\0\0\0\0\0\0\x01\0\0\0\x30hvc1".str_repeat("\0", 40));
+        $hevc = $make('Bakary', 'temoignages/videos/b.mov');
+        $service->process($hevc);
+        $hevc->refresh();
+        $this->assertSame(Temoignage::VIDEO_FAILED, $hevc->video_status);
+        $this->assertStringContainsString('HEVC', $hevc->video_error);
+
+        $this->actingAs(User::factory()->gestionnaire()->create())->get('/admin/temoignages')->assertOk()
+            ->assertSee('Ouvrir la vidéo')->assertSee('Télécharger la vidéo')->assertSee('storage/temoignages/videos/b.mov#t=1', false)->assertSee('Pas affichée sur le site');
     }
 
     public function test_a_non_video_file_is_refused_and_chunks_must_arrive_in_order(): void
