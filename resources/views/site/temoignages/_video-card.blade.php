@@ -11,6 +11,9 @@
     @endif
         @if ($poster)
             <img src="{{ $poster }}" alt="" loading="lazy" width="720" height="405">
+        @elseif ($temoignage->hasVideo())
+            {{-- Pas d'image d'aperçu (serveur sans ffmpeg) : le navigateur affiche l'image de la vidéo à 1 s. --}}
+            <video class="vt-frame" src="{{ $temoignage->videoUrl() }}#t=1" preload="metadata" muted playsinline tabindex="-1" aria-hidden="true"></video>
         @else
             <span class="vt-placeholder"><i class='bx bx-user-voice' aria-hidden="true"></i></span>
         @endif

@@ -14,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -125,6 +126,26 @@ class TemoignageVideoTest extends TestCase
         // Un second clic le masque.
         $this->post("/admin/temoignages/{$temoignage->id}/publication")->assertSessionHas('status', fn ($s) => str_contains($s, 'masqué'));
         $this->assertFalse($temoignage->fresh()->is_published);
+
+        // Vidéo pas encore prête ou illisible : validé quand même, avec un avertissement qui reste affiché.
+        $temoignage->refresh()->forceFill(['video_path' => 'temoignages/videos/x.mov', 'video_status' => Temoignage::VIDEO_PROCESSING])->saveQuietly();
+        $this->post("/admin/temoignages/{$temoignage->id}/publication")->assertSessionHas('warning', fn ($s) => str_contains($s, 'encore en préparation'));
+        $temoignage->refresh()->forceFill(['is_published' => false, 'video_status' => Temoignage::VIDEO_FAILED, 'video_error' => 'ffmpeg absent'])->saveQuietly();
+        $this->post("/admin/temoignages/{$temoignage->id}/publication")->assertSessionHas('warning', fn ($s) => str_contains($s, 'illisible') && str_contains($s, 'MP4'));
+        $this->assertTrue($temoignage->fresh()->is_published);
+    }
+
+    public function test_the_video_address_follows_the_visited_site_not_app_url(): void
+    {
+        // APP_URL faux sur le serveur (http, autre domaine) : la vidéo reste lisible, comme les images (asset()).
+        config(['app.url' => 'http://localhost', 'filesystems.disks.public.url' => 'http://localhost/storage']);
+        Temoignage::create(['author_name' => 'Issa Traoré', 'content' => 'Très bien.', 'source' => 'client', 'contact' => 'x', 'consent_at' => now(), 'is_published' => true, 'sort_order' => 0,
+            'video_path' => 'temoignages/videos/pi.mp4', 'video_status' => Temoignage::VIDEO_READY]);
+
+        $this->get('https://computerservicebarry.com/temoignages')->assertOk()
+            ->assertSee('data-video-play="https://computerservicebarry.com/storage/temoignages/videos/pi.mp4"', false)
+            ->assertSee('class="vt-frame"', false) // pas d'image d'aperçu : l'image de la vidéo sert d'aperçu
+            ->assertDontSee('http://localhost/storage', false);
     }
 
     public function test_a_non_video_file_is_refused_and_chunks_must_arrive_in_order(): void
@@ -140,6 +161,8 @@ class TemoignageVideoTest extends TestCase
     {
         $this->syncPermissions();
         Process::fake(['*' => Process::result(exitCode: 127)]);
+        // Hébergement sans ffmpeg et dont le cron ne vide pas la file : la vidéo est prête sans passer par la file.
+        Queue::fake();
         $this->actingAs(User::factory()->gestionnaire()->create());
 
         $token = $this->uploadInChunks('/admin/temoignages/video', $this->fixture());
@@ -148,6 +171,7 @@ class TemoignageVideoTest extends TestCase
         $temoignage = Temoignage::sole();
         $this->assertSame(Temoignage::VIDEO_READY, $temoignage->video_status);
         $this->assertNull($temoignage->video_poster_path);
+        Queue::assertNothingPushed();
         Storage::disk('public')->assertExists($temoignage->video_path);
         $this->get('/admin/temoignages')->assertOk()->assertSee('Seydou Diarra');
     }

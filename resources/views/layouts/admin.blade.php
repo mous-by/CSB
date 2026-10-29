@@ -37,6 +37,11 @@
                 showConfirmButton: false,
             }));
         @endif
+        @if (session('warning'))
+            window.addEventListener('DOMContentLoaded', () => Swal.fire({
+                icon: 'warning', text: @json(session('warning')),
+            }));
+        @endif
         @if (session('error'))
             window.addEventListener('DOMContentLoaded', () => Swal.fire({
                 icon: 'error', text: @json(session('error')),

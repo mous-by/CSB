@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Témoignage d'un client (cahier §4 « témoignages autorisés ») : écrit et/ou vidéo (fichier hébergé par le site, ou lien
@@ -63,14 +62,15 @@ class Temoignage extends Model
         return $this->hasVideo() || $this->video_url !== null;
     }
 
+    /** Adresse de la page visitée (asset(), comme les images), jamais APP_URL : un APP_URL faux ne casse pas la vidéo. */
     public function videoUrl(): ?string
     {
-        return $this->hasVideo() ? Storage::disk('public')->url($this->video_path) : null;
+        return $this->hasVideo() ? asset('storage/'.$this->video_path) : null;
     }
 
     public function posterUrl(): ?string
     {
-        return $this->video_poster_path ? Storage::disk('public')->url($this->video_poster_path) : $this->photo?->url();
+        return $this->video_poster_path ? asset('storage/'.$this->video_poster_path) : $this->photo?->url();
     }
 
     /** « 1:24 » */

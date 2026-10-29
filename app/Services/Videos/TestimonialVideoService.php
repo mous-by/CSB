@@ -30,6 +30,14 @@ class TestimonialVideoService
             'video_path' => $target, 'video_poster_path' => null, 'video_duration' => null, 'video_status' => Temoignage::VIDEO_PROCESSING, 'video_error' => null,
         ]));
 
+        // Sans ffmpeg (hébergement mutualisé), il n'y a rien à convertir : la vidéo est prête (MP4, WebM) ou refusée
+        // tout de suite, sans dépendre de la file d'attente (cron) qui peut ne pas tourner.
+        if (! $this->ffmpegAvailable()) {
+            $this->process($temoignage);
+
+            return;
+        }
+
         ProcessTestimonialVideo::dispatch($temoignage->id);
     }
 

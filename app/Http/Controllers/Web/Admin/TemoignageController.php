@@ -48,11 +48,19 @@ class TemoignageController extends Controller
         $moderated = $temoignage->awaitingModeration();
         $publisher->toggle($temoignage, 'temoignages');
 
-        return redirect()->route('temoignages.index')->with('status', "Témoignage de {$temoignage->author_name} ".match (true) {
+        // Vidéo pas encore prête : le témoignage est publié, mais la vidéo n'apparaîtra sur le site qu'une fois prête.
+        $video = match (true) {
+            ! $temoignage->is_published || ! $temoignage->video_path => '',
+            $temoignage->video_status === Temoignage::VIDEO_PROCESSING => ' La vidéo est encore en préparation : elle apparaîtra sur le site dès qu\'elle sera prête.',
+            $temoignage->video_status === Temoignage::VIDEO_FAILED => ' Attention : la vidéo est illisible ('.($temoignage->video_error ?: 'format non pris en charge').') ; seul le texte est affiché. Demandez au client une vidéo MP4.',
+            default => '',
+        };
+
+        return redirect()->route('temoignages.index')->with($video === '' ? 'status' : 'warning', "Témoignage de {$temoignage->author_name} ".match (true) {
             $moderated => 'validé : il est maintenant publié sur le site.',
             $temoignage->is_published => 'publié.',
             default => 'masqué.',
-        });
+        }.$video);
     }
 
     public function destroy(Temoignage $temoignage): RedirectResponse
