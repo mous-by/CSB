@@ -248,6 +248,10 @@
         </div>
     </section>
 
+    @if ($ecolesReferences['total'] > 0)
+        @include('site.home._ecoles', $ecolesReferences)
+    @endif
+
     @if ($site->rows('home.stats', 3))
         <section class="stats-band">
             <div class="container">

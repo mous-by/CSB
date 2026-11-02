@@ -6,6 +6,7 @@ use App\Enums\CategoryType;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\EcoleReference;
 use App\Models\Logiciel;
 use App\Models\Materiel;
 use App\Models\Prestation;
@@ -58,6 +59,7 @@ class PageController extends Controller
                 ->orderByRaw('CASE WHEN promo_price IS NOT NULL AND price IS NOT NULL AND promo_price < price AND (promo_ends_on IS NULL OR promo_ends_on >= ?) THEN 0 ELSE 1 END', [today()->toDateString()])
                 ->ordered()->limit(12)->get(),
             'sections' => $sections,
+            'ecolesReferences' => EcoleReference::pourLaBande(),
             'counters' => str_contains($this->settings->get('home.stats'), '{') ? $stats->publicCounters() : [],
             'seo' => Seo::make(canonical: route('site.home')),
         ]);

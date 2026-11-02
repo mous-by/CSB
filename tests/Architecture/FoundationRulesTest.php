@@ -5,6 +5,7 @@ namespace Tests\Architecture;
 use App\Models\ActivityLog;
 use App\Models\Concerns\LogsActivity;
 use App\Models\DocumentSequence;
+use App\Models\EcoleReference;
 use App\Models\MouvementStock;
 use App\Models\PushSubscription;
 use Illuminate\Database\Eloquent\Model;
@@ -19,8 +20,9 @@ class FoundationRulesTest extends TestCase
     public function test_every_business_model_uses_logs_activity(): void
     {
         // Exemptés : les journaux eux-mêmes (audit, mouvements de stock, non modifiables), le compteur technique de
-        // numérotation (le numéro attribué est audité avec son document) et les abonnements push (appareils, technique).
-        $exempt = [ActivityLog::class, MouvementStock::class, DocumentSequence::class, PushSubscription::class];
+        // numérotation (le numéro attribué est audité avec son document), les abonnements push (appareils, technique) et
+        // les écoles des applications connectées (copie envoyée par l'application, jamais saisie dans CSB).
+        $exempt = [ActivityLog::class, MouvementStock::class, DocumentSequence::class, PushSubscription::class, EcoleReference::class];
 
         foreach (glob(app_path('Models/*.php')) as $file) {
             $class = 'App\\Models\\'.basename($file, '.php');
