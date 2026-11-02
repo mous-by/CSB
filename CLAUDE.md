@@ -142,6 +142,8 @@ Site web professionnel de **Computer Service Barry (CSB)** — « Qualité • F
 
 **Fait — écoles de KalanNet sur l'accueil** (2026-11-02, demande de CSB) : bande « Ils nous font confiance » (`site.home._ecoles`, `EcoleReference::pourLaBande` : 20 plus récentes, puis logos, puis tirage, 80 au plus, vrai total affiché). API `POST /api/v1/references/ecoles` et `/{ref}/logo` (jeton de portée `tickets` de l'application, `Api\EcoleReferenceController`) : nom, adresse, logo (ré-encodé en PNG 240 px), `visible`, `complet` retire les absentes ; une application ne touche qu'à ses écoles. Cache en tableaux (`serializable_classes` = false), vidé à chaque envoi. Côté KalanNet : école et abonnement enregistrés → envoi immédiat ; cron `csb:ecoles` ; retrait par l'Admin de l'école.
 
+**Tableau de bord sans alerte de sauvegarde** (2026-11-02, demande de CSB : sauvegardes assurées par l'hébergeur) : alerte, ligne de la cloche et carte « Dernière sauvegarde » retirées ; `backup:run` / `backup:verify` et la tâche planifiée restent.
+
 **Reste** (dépend de CSB) : contenus réels (logo, textes officiels, logiciels avec captures, matériel avec prix, réalisations autorisées, témoignages), mentions légales, SMTP et destinataire des notifications, audit de l'hébergement et mise en ligne HTTPS (phases 8 et 9). 
 
 ## 3. Démarrer

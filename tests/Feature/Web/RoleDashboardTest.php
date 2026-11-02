@@ -34,7 +34,7 @@ class RoleDashboardTest extends TestCase
         $this->actingAs(User::factory()->administrateur()->create())->get('/admin')->assertOk()
             ->assertSee('Administration du site')
             ->assertSee('Comptes et accès')->assertSee('DERNIÈRES CONNEXIONS')
-            ->assertSee('Exploitation')->assertSee('Dernière sauvegarde')->assertSee('Notifications e-mail')
+            ->assertSee('Exploitation')->assertDontSee('Dernière sauvegarde')->assertSee('Notifications e-mail')
             ->assertDontSee('ACTIVITÉ PAR AGENT');
     }
 
@@ -46,12 +46,12 @@ class RoleDashboardTest extends TestCase
             ->assertSee('Supervision')->assertSee('ACTIVITÉ PAR AGENT (30 JOURS)')->assertSee('DERNIÈRES ACTIONS');
     }
 
-    public function test_notifications_follow_the_same_rule(): void
+    public function test_no_backup_alert_on_the_dashboard(): void
     {
         config(['backup.path' => sys_get_temp_dir().'/csb-no-backup-'.uniqid()]);
 
-        $this->actingAs(User::factory()->administrateur()->create())->get('/admin')->assertSee('Aucune sauvegarde de la base n');
-        $this->actingAs(User::factory()->commercial()->create())->get('/admin')->assertDontSee('Aucune sauvegarde de la base n');
+        // Sauvegardes assurées par l'hébergeur : aucune alerte, même sans fichier de sauvegarde.
+        $this->actingAs(User::factory()->administrateur()->create())->get('/admin')->assertOk()->assertDontSee('Sauvegarde.')->assertDontSee('backup:run');
     }
 
     public function test_a_user_without_any_module_gets_a_clear_message(): void

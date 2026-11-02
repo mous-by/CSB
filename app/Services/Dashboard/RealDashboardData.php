@@ -20,12 +20,9 @@ use App\Models\Realisation;
 use App\Models\Temoignage;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Services\Backup\DatabaseBackup;
 use App\Services\Partenaires\PartnerStats;
 use App\Services\Statistiques\SiteStats;
 use App\Support\SiteSettings;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -40,9 +37,7 @@ use Illuminate\Support\Facades\Route;
 class RealDashboardData
 {
     /** Âge maximal d'une sauvegarde avant alerte (sauvegarde quotidienne + marge). */
-    private const BACKUP_MAX_AGE_HOURS = 26;
-
-    public function __construct(private readonly DatabaseBackup $backups, private readonly SiteSettings $settings) {}
+    public function __construct(private readonly SiteSettings $settings) {}
 
     /**
      * @return array{heading: string, alerts: list<array<string, string>>, tasks: list<array<string, mixed>>, quick: list<array<string, mixed>>, chart: array<string, mixed>|null, sections: list<array<string, mixed>>}
@@ -125,13 +120,6 @@ class RealDashboardData
             $waiting = Ticket::open()->where('awaiting_team', true)->count();
             if ($waiting > 0) {
                 $items[] = ['icon' => 'bx-support', 'class' => 'text-danger', 'text' => "{$waiting} ticket(s) d'assistance en attente de réponse.", 'link' => route('tickets.index')];
-            }
-        }
-
-        if ($user->can('exploitation.view')) {
-            $backup = $this->backupState();
-            if (! $backup['ok']) {
-                $items[] = ['icon' => 'bx-data', 'class' => 'text-danger', 'text' => $backup['message'], 'link' => route('home')];
             }
         }
 
@@ -298,20 +286,14 @@ class RealDashboardData
         $dashboard['sections'][] = ['title' => 'Comptes et accès', 'icon' => 'bx bx-user-circle', 'cards' => $cards, 'tables' => $tables];
     }
 
-    /** Exploitation (exploitation.view) : sauvegarde, destinataire des notifications e-mail. */
+    /** Exploitation (exploitation.view) : destinataire des notifications e-mail (sauvegardes : assurées par l'hébergeur, pas d'alerte ici). */
     private function exploitation(array &$dashboard): void
     {
-        $backup = $this->backupState();
         $recipient = $this->settings->notificationEmail();
         $mailer = (string) config('mail.default');
         $mailReal = ! in_array($mailer, ['log', 'array'], true);
 
-        if (! $backup['ok']) {
-            $dashboard['alerts'][] = ['class' => 'alert-danger', 'icon' => 'bx bx-data', 'title' => 'Sauvegarde.', 'text' => $backup['message'].' Lancez « php artisan backup:run » et vérifiez la tâche planifiée (CLAUDE.md §9).'];
-        }
-
         $cards = [
-            $this->card('Dernière sauvegarde', $backup['value'], $backup['sub'], 'bx bx-data', $backup['ok'] ? 'success' : 'danger'),
             $this->card('Notifications e-mail', $mailReal ? 'Envoi actif' : 'Non configuré', $recipient ? "vers {$recipient}" : 'aucun destinataire', 'bx bx-envelope', $mailReal && $recipient ? 'info' : 'warning', ! ($mailReal && $recipient)),
         ];
 
@@ -354,33 +336,6 @@ class RealDashboardData
         ];
 
         $dashboard['sections'][] = ['title' => 'Supervision', 'icon' => 'bx bx-show', 'cards' => $cards, 'tables' => $tables];
-    }
-
-    /**
-     * État de la dernière sauvegarde (fichier le plus récent et dernier résultat de backup:verify).
-     *
-     * @return array{ok: bool, value: string, sub: string, message: string}
-     */
-    private function backupState(): array
-    {
-        $file = $this->backups->latest();
-        if ($file === null) {
-            return ['ok' => false, 'value' => 'Aucune', 'sub' => 'aucune sauvegarde trouvée', 'message' => 'Aucune sauvegarde de la base n\'a été trouvée.'];
-        }
-
-        $at = Carbon::createFromTimestamp(filemtime($file))->setTimezone(config('app.timezone'));
-        $hours = (int) $at->diffInHours(now());
-        $verification = Cache::get('backup.last_verification');
-        $verified = is_array($verification) && $verification['file'] === basename($file);
-
-        if ($hours > self::BACKUP_MAX_AGE_HOURS) {
-            return ['ok' => false, 'value' => $at->format('d/m/Y H:i'), 'sub' => "il y a {$hours} h", 'message' => "La dernière sauvegarde date de {$hours} heures."];
-        }
-        if ($verified && ! $verification['ok']) {
-            return ['ok' => false, 'value' => $at->format('d/m/Y H:i'), 'sub' => 'vérification échouée', 'message' => 'La dernière sauvegarde a échoué à la vérification : '.implode(' ', $verification['problems'])];
-        }
-
-        return ['ok' => true, 'value' => $at->format('d/m/Y H:i'), 'sub' => $verified ? 'vérifiée' : 'non encore vérifiée', 'message' => ''];
     }
 
     private function heading(User $user): string
