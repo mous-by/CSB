@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\EcoleReferenceController;
 use App\Http\Controllers\Api\StockSyncController;
 use App\Http\Controllers\Api\TicketController;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,9 @@ Route::name('api.')->prefix('v1')->middleware(['throttle:60,1', 'sync.token'])->
 
 // Tickets des applications connectées (KalanNet, DojoManager…) : jeton de portée « tickets » (Tickets → Applications).
 Route::name('api.')->prefix('v1')->middleware(['throttle:60,1', 'sync.token:tickets'])->group(function () {
+    // Écoles de l'application : bande « Ils nous font confiance » de l'accueil.
+    Route::post('/references/ecoles', [EcoleReferenceController::class, 'sync'])->name('references.ecoles');
+    Route::post('/references/ecoles/{ref}/logo', [EcoleReferenceController::class, 'logo'])->name('references.ecoles.logo');
     Route::get('/tickets/options', [TicketController::class, 'options'])->name('tickets.options');
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
