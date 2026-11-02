@@ -28,39 +28,24 @@ class EcoleReference extends Model
     }
 
     /**
-     * Écoles de la bande de l'accueil et nombre total. Plusieurs centaines d'écoles ne tiennent pas dans une bande : les
-     * plus récentes toujours (une nouvelle école apparaît aussitôt), puis celles qui ont un logo, puis un tirage qui
-     * change à chaque renouvellement du cache. Cache vidé dès qu'une application envoie ses écoles ; tableaux seulement
-     * (config/cache.php n'autorise pas les objets en cache).
+     * Écoles de la bande de l'accueil et leur nombre : seulement celles qui ont un logo (une école sans logo apparaît dès
+     * qu'elle en ajoute un). Si elles sont trop nombreuses : les plus récentes toujours, puis un tirage qui change à chaque
+     * renouvellement du cache. Cache vidé dès qu'une application envoie ses écoles ; tableaux seulement (config/cache.php
+     * n'autorise pas les objets en cache).
      *
      * @return array{total: int, ecoles: Collection<int, self>}
      */
     public static function pourLaBande(): array
     {
         $donnees = Cache::remember(self::CACHE_KEY, 3600, function () {
-            $visibles = fn () => self::where('is_visible', true);
+            $visibles = fn () => self::where('is_visible', true)->whereNotNull('logo_path');
             $recentes = $visibles()->latest('id')->limit(self::BANDE_RECENTES)->get();
-            $autres = $visibles()->whereNotIn('id', $recentes->modelKeys())->orderByRaw('logo_path IS NULL')->inRandomOrder()
+            $autres = $visibles()->whereNotIn('id', $recentes->modelKeys())->inRandomOrder()
                 ->limit(self::BANDE_MAX - $recentes->count())->get();
 
             return ['total' => $visibles()->count(), 'ecoles' => $recentes->concat($autres)->toArray()];
         });
 
         return ['total' => $donnees['total'], 'ecoles' => self::hydrate($donnees['ecoles'])];
-    }
-
-    /** Initiales affichées quand l'école n'a pas de logo. */
-    public function initials(): string
-    {
-        $mots = array_filter(preg_split('/[\s\-\']+/u', mb_strtoupper($this->name)), fn ($mot) => mb_strlen($mot) > 2);
-        $mots = array_values($mots ?: [$this->name]);
-
-        return mb_substr($mots[0], 0, 1).(isset($mots[1]) ? mb_substr($mots[1], 0, 1) : '');
-    }
-
-    /** Teinte stable de la pastille des initiales. */
-    public function hue(): int
-    {
-        return crc32($this->name) % 360;
     }
 }
