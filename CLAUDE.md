@@ -144,6 +144,8 @@ Site web professionnel de **Computer Service Barry (CSB)** — « Qualité • F
 
 **Fait — anti-spam du contenu et alertes par application** (2026-11-06, demande de CSB) : `SpamGuard::isSpam()` refuse aussi (fausse réussite, rien d'enregistré) un e-mail qui **imite le domaine du site** (`domains@search-computerservicebarry.com`, arnaque au référencement ; nom tiré d'`APP_URL`) et tout envoi contenant un domaine ou une expression de la liste **Pages et paramètres → Anti-spam** (`antispam.blocked`, une entrée par ligne, sans majuscules) ; vaut pour demandes, commandes, témoignages et newsletter. **Tickets des applications connectées** : `api_tokens.notify_emails` (Tickets → Applications connectées, champ sous chaque application, 10 adresses au plus, reprises quand un nouveau jeton porte le même nom) ; `TicketService::notifyTeam()` envoie `TicketForTeam` aussitôt au destinataire de l'équipe **et** à ces adresses, au nouveau ticket et à chaque réponse du demandeur. Les adresses ne sont jamais dans le code.
 
+**Tableau de bord sans alerte de sauvegarde** (2026-11-02, demande de CSB : sauvegardes assurées par l'hébergeur) : alerte, ligne de la cloche et carte « Dernière sauvegarde » retirées ; `backup:run` / `backup:verify` et la tâche planifiée restent.
+
 **Reste** (dépend de CSB) : contenus réels (logo, textes officiels, logiciels avec captures, matériel avec prix, réalisations autorisées, témoignages), mentions légales, SMTP et destinataire des notifications, audit de l'hébergement et mise en ligne HTTPS (phases 8 et 9). 
 
 ## 3. Démarrer
