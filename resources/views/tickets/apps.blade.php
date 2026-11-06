@@ -38,14 +38,28 @@
                         <button type="submit" class="btn btn-primary text-nowrap"><i class='bx bx-plus'></i> Connecter</button>
                     </form>
                     @error('name')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
+                    @error('emails')<div class="alert alert-danger py-2 small">{{ $message }}</div>@enderror
+                    @foreach ($errors->get('emails.*') as $messages)<div class="alert alert-danger py-2 small">{{ $messages[0] }}</div>@endforeach
                     <p class="small text-muted">Le nom s'affiche sur chaque ticket ouvert depuis l'application. Un nouveau jeton portant le même nom retrouve ses tickets.</p>
                     <ul class="list-unstyled mb-0">
                         @forelse ($tokens as $token)
-                            <li class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
-                                <div>
+                            <li class="d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 border-bottom">
+                                <div class="flex-grow-1">
                                     <strong>{{ $token->name }}</strong> <code>…{{ $token->last_four }}</code>
                                     @if ($token->revoked_at)<span class="badge bg-secondary-subtle">Révoqué</span>@else<span class="badge bg-success-subtle">Actif</span>@endif
                                     <div class="small text-muted">{{ $counts[$token->name] ?? 0 }} ticket(s) · dernier appel : {{ $token->last_used_at?->format('d/m/Y H:i') ?? 'jamais' }}</div>
+                                    @unless ($token->revoked_at)
+                                        {{-- Prévenues aussitôt par e-mail à chaque nouveau ticket et à chaque réponse du demandeur de cette application. --}}
+                                        <form method="POST" action="{{ route('tickets.apps.recipients', $token) }}" class="mt-2">
+                                            @csrf
+                                            @method('PUT')
+                                            <label class="form-label small fw-semibold mb-1" for="notify-{{ $token->id }}"><i class='bx bx-envelope me-1'></i>E-mails prévenus à chaque ticket de {{ $token->name }}</label>
+                                            <div class="d-flex gap-2">
+                                                <textarea name="notify_emails" id="notify-{{ $token->id }}" rows="2" class="form-control form-control-sm" placeholder="une adresse par ligne">{{ $token->notify_emails }}</textarea>
+                                                <button type="submit" class="btn btn-primary btn-sm align-self-start"><i class='bx bx-save'></i><span class="ms-1">Enregistrer</span></button>
+                                            </div>
+                                        </form>
+                                    @endunless
                                 </div>
                                 @unless ($token->revoked_at)
                                     <form method="POST" action="{{ route('tickets.apps.revoke', $token) }}" class="js-confirm-delete" data-title="Révoquer ce jeton ?" data-name="Le jeton de {{ $token->name }}">

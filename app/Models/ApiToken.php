@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
  * (portée « tickets », son nom est celui de l'application). Seule son empreinte SHA-256 est enregistrée : le jeton en
  * clair n'est montré qu'une fois, à sa création.
  */
-#[Fillable(['name', 'scope', 'token_hash', 'last_four', 'last_used_at', 'created_by', 'revoked_at'])]
+#[Fillable(['name', 'scope', 'notify_emails', 'token_hash', 'last_four', 'last_used_at', 'created_by', 'revoked_at'])]
 #[Hidden(['token_hash'])]
 class ApiToken extends Model
 {
@@ -34,8 +34,16 @@ class ApiToken extends Model
     public static function issue(string $name, ?User $creator, string $scope = self::SCOPE_STOCK): array
     {
         $plain = 'csb_'.Str::random(44);
+        // Nouveau jeton d'une application déjà connue : ses adresses à prévenir sont reprises.
+        $emails = self::where('name', $name)->where('scope', $scope)->whereNotNull('notify_emails')->latest('id')->value('notify_emails');
 
-        return [self::create(['name' => $name, 'scope' => $scope, 'token_hash' => hash('sha256', $plain), 'last_four' => substr($plain, -4), 'created_by' => $creator?->id]), $plain];
+        return [self::create(['name' => $name, 'scope' => $scope, 'notify_emails' => $emails, 'token_hash' => hash('sha256', $plain), 'last_four' => substr($plain, -4), 'created_by' => $creator?->id]), $plain];
+    }
+
+    /** Adresses prévenues à chaque ticket de l'application. @return list<string> */
+    public function notifyEmails(): array
+    {
+        return array_values(array_filter(array_map('trim', preg_split('/[\s,;]+/', (string) $this->notify_emails) ?: [])));
     }
 
     public static function findActive(string $plain, string $scope = self::SCOPE_STOCK): ?self

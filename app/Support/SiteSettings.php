@@ -87,6 +87,9 @@ class SiteSettings
             'seo.default_description' => ['Méta-description par défaut', 'textarea', 300, 'Utilisée par les pages qui n\'ont pas la leur (160 caractères conseillés).'],
             'seo.google_site_verification' => ['Code de vérification Google Search Console', 'text', 100, 'Seulement le code (contenu de la balise « google-site-verification »).'],
         ]],
+        'antispam' => ['label' => 'Anti-spam', 'permission' => 'pages.settings', 'icon' => 'bx bx-shield-x', 'fields' => [
+            'antispam.blocked' => ['Domaines et mots bloqués', 'textarea', 3000, 'Un élément par ligne : un domaine d\'e-mail (ex. « spam-seo.com ») ou une expression (ex. « results for »). Tout formulaire du site (demande, commande, témoignage, newsletter) qui en contient un est ignoré sans prévenir l\'expéditeur. Les e-mails qui imitent le domaine du site sont déjà refusés automatiquement. Évitez les mots courts ou courants : un vrai client serait bloqué.'],
+        ]],
     ];
 
     public function get(string $key): string

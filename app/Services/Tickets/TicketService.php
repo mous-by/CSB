@@ -199,13 +199,15 @@ class TicketService
         ]);
     }
 
+    /** Destinataire de l'équipe, plus les adresses propres à l'application connectée (Tickets → Applications connectées). */
     private function notifyTeam(Ticket $ticket, string $event): void
     {
-        $recipient = $this->settings->notificationEmail();
-        if (! $recipient) {
+        $appEmails = $ticket->api_token_id ? (ApiToken::find($ticket->api_token_id)?->notifyEmails() ?? []) : [];
+        $recipients = array_values(array_unique(array_filter([$this->settings->notificationEmail(), ...$appEmails])));
+        if ($recipients === []) {
             return;
         }
-        $this->send(fn () => Mail::to($recipient)->send(new TicketForTeam($ticket->fresh(['client', 'messages']), $event)), $ticket);
+        $this->send(fn () => Mail::to($recipients)->send(new TicketForTeam($ticket->fresh(['client', 'messages']), $event)), $ticket);
     }
 
     private function notifyClient(Ticket $ticket, ?TicketMessage $message, bool $opened = false): void

@@ -35,6 +35,20 @@ class TicketAppController extends Controller
         return redirect()->route('tickets.apps.index')->with('new_token', $plain);
     }
 
+    /** Adresses e-mail prévenues aussitôt à chaque ticket de l'application (une par ligne ou séparées par des virgules). */
+    public function recipients(Request $request, ApiToken $token): RedirectResponse
+    {
+        abort_unless($token->scope === ApiToken::SCOPE_TICKETS && ! $token->revoked_at, 404);
+        $emails = array_values(array_unique(array_filter(array_map(fn ($e) => mb_strtolower(trim($e)), preg_split('/[\s,;]+/', (string) $request->input('notify_emails')) ?: []))));
+        validator(['emails' => $emails], ['emails' => ['array', 'max:10'], 'emails.*' => ['email', 'max:190']],
+            ['emails.max' => '10 adresses au plus.', 'emails.*.email' => '« :input » n\'est pas une adresse e-mail valide.'])->validate();
+        $token->update(['notify_emails' => $emails === [] ? null : implode("\n", $emails)]);
+
+        return redirect()->route('tickets.apps.index')->with('status', $emails === []
+            ? "Plus aucune adresse supplémentaire n'est prévenue pour « {$token->name} »."
+            : count($emails)." adresse(s) prévenue(s) à chaque ticket de « {$token->name} ».");
+    }
+
     public function revoke(ApiToken $token): RedirectResponse
     {
         abort_unless($token->scope === ApiToken::SCOPE_TICKETS, 404);

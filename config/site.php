@@ -94,6 +94,9 @@ return [
         // Référencement (cahier §11.1)
         'seo.default_description' => 'Computer Service Barry (CSB) : vente de matériel informatique, réparation et maintenance, développement de logiciels et d\'applications web et mobiles.',
         'seo.google_site_verification' => '',
+
+        // Anti-spam des formulaires (App\Support\SpamGuard) : un domaine ou une expression par ligne.
+        'antispam.blocked' => '',
     ],
 
 ];

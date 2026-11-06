@@ -11,6 +11,7 @@ use App\Models\ActivityLog;
 use App\Models\Demande;
 use App\Models\Logiciel;
 use App\Models\Materiel;
+use App\Support\SiteSettings;
 use App\Support\SpamGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -101,6 +102,31 @@ class DemandeFormsTest extends TestCase
 
         $this->assertSame(0, Demande::count());
         Mail::assertNothingSent();
+    }
+
+    public function test_lookalike_domains_and_blocked_words_get_a_success_but_nothing_is_saved(): void
+    {
+        config(['app.url' => 'https://computerservicebarry.com']);
+        $spam = ['name' => 'Swen', 'phone' => '3868123422', 'subject' => 'Results for computerservicebarry.com', 'message' => 'Your domain listing is about to expire.'];
+
+        // Arnaque au référencement : adresse qui imite le domaine du site.
+        $this->postJson('/contact', $this->human($spam + ['email' => 'domains@search-computerservicebarry.com']))->assertOk()->assertJsonPath('title', 'Message envoyé');
+        $this->postJson('/contact', $this->human($spam + ['email' => 'info@computerservicebarry-seo.net']))->assertOk();
+        $this->assertSame(0, Demande::count());
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.2']); // 5 envois par minute et par adresse : une adresse par étape
+        // Liste « Anti-spam » réglée dans l'administration : domaine ou expression, sans tenir compte des majuscules.
+        app(SiteSettings::class)->save(['antispam.blocked' => "spam-seo.com\nyour domain listing"]);
+        $this->postJson('/contact', $this->human(['name' => 'Bob', 'email' => 'bob@spam-seo.com', 'subject' => 'Hello', 'message' => 'Bonjour, une offre pour vous.']))->assertOk();
+        $this->postJson('/contact', $this->human(['name' => 'Bob', 'email' => 'bob@mail.test', 'subject' => 'Hello', 'message' => 'YOUR DOMAIN LISTING expires soon.']))->assertOk();
+        $this->assertSame(0, Demande::count());
+        Mail::assertNothingSent();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.3']);
+        // Les vrais clients passent : adresse Gmail, et l'adresse du site elle-même.
+        $this->postJson('/contact', $this->human(['name' => 'Awa Traoré', 'email' => 'awa.traore@gmail.com', 'subject' => 'Devis', 'message' => 'Il nous faut 10 ordinateurs pour l\'école.']))->assertOk();
+        $this->postJson('/contact', $this->human(['name' => 'Équipe', 'email' => 'contact@computerservicebarry.com', 'subject' => 'Test', 'message' => 'Message de test du site.']))->assertOk();
+        $this->assertSame(2, Demande::count());
     }
 
     public function test_submissions_are_rate_limited(): void

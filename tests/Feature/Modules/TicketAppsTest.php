@@ -55,6 +55,35 @@ class TicketAppsTest extends TestCase
         $this->actingAs($commercial)->get('/admin/tickets/applications')->assertForbidden();
     }
 
+    public function test_the_application_s_own_addresses_are_warned_instantly_of_each_ticket(): void
+    {
+        $this->syncPermissions();
+        Mail::fake();
+        Bus::fake([SendPushNotification::class]);
+        config(['site.notification_email' => 'equipe@csb.test']);
+        $this->actingAs(User::factory()->administrateur()->create());
+        [$token, $plain] = ApiToken::issue('KalanNet', null, ApiToken::SCOPE_TICKETS);
+
+        // Réglage dans Tickets → Applications connectées : une adresse invalide est refusée, rien n'est changé.
+        $this->put("/admin/tickets/applications/{$token->id}/alertes", ['notify_emails' => "dev@kalannet.test\npas-une-adresse"])->assertSessionHasErrors();
+        $this->assertNull($token->fresh()->notify_emails);
+        $this->put("/admin/tickets/applications/{$token->id}/alertes", ['notify_emails' => "Dev@KalanNet.test, support@kalannet.test\n\ndev@kalannet.test"])
+            ->assertRedirect('/admin/tickets/applications')->assertSessionHas('status', fn ($s) => str_contains($s, '2 adresse(s)'));
+        $this->assertSame(['dev@kalannet.test', 'support@kalannet.test'], $token->fresh()->notifyEmails());
+        $this->get('/admin/tickets/applications')->assertSee('support@kalannet.test');
+
+        // Nouveau ticket et réponse du demandeur : un e-mail aussitôt, à l'équipe et aux adresses de l'application.
+        $number = $this->withToken($plain)->postJson('/api/v1/tickets', $this->payload())->assertCreated()->json('data.number');
+        $this->withToken($plain)->postJson("/api/v1/tickets/{$number}/messages", ['reporter_ref' => '42', 'body' => 'Toujours une page blanche.'])->assertCreated();
+        Mail::assertSent(TicketForTeam::class, 2);
+        Mail::assertSent(TicketForTeam::class, fn (TicketForTeam $m) => $m->hasTo('equipe@csb.test') && $m->hasTo('dev@kalannet.test') && $m->hasTo('support@kalannet.test'));
+
+        // Nouveau jeton pour la même application : les adresses sont reprises.
+        $token->update(['revoked_at' => now()]);
+        [$renewed] = ApiToken::issue('KalanNet', null, ApiToken::SCOPE_TICKETS);
+        $this->assertSame(['dev@kalannet.test', 'support@kalannet.test'], $renewed->notifyEmails());
+    }
+
     public function test_tokens_are_scoped_stock_and_tickets_never_mix(): void
     {
         [, $stock] = ApiToken::issue('Logiciel de stock', null);
