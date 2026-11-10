@@ -53,6 +53,7 @@ class RealDashboardData
             $this->frequentation($dashboard);
         }
         $this->partenaires($user, $dashboard);
+        $this->ticketsDeLApplication($user, $dashboard);
         $this->contenus($user, $dashboard);
         if ($user->can('users.view')) {
             $this->comptes($user, $dashboard);
@@ -78,7 +79,7 @@ class RealDashboardData
             'demandes' => $user->can('demandes.view') ? Demande::where('status', DemandeStatus::Nouvelle->value)->count() : 0,
             'commandes' => $user->can('boutique.view') ? Commande::where('status', CommandeStatus::Nouvelle->value)->count() : 0,
             'temoignages' => $user->can('temoignages.update') ? Temoignage::where('source', 'client')->where('is_published', false)->count() : 0,
-            'tickets' => $user->can('tickets.view') ? Ticket::open()->where('awaiting_team', true)->count() : 0,
+            'tickets' => $user->can('tickets.view') ? Ticket::visibleTo($user)->open()->where('awaiting_team', true)->count() : 0,
         ]);
     }
 
@@ -117,7 +118,7 @@ class RealDashboardData
         }
 
         if ($user->can('tickets.view') && Route::has('tickets.index')) {
-            $waiting = Ticket::open()->where('awaiting_team', true)->count();
+            $waiting = Ticket::visibleTo($user)->open()->where('awaiting_team', true)->count();
             if ($waiting > 0) {
                 $items[] = ['icon' => 'bx-support', 'class' => 'text-danger', 'text' => "{$waiting} ticket(s) d'assistance en attente de réponse.", 'link' => route('tickets.index')];
             }
@@ -242,6 +243,36 @@ class RealDashboardData
         ]];
     }
 
+    /**
+     * Tickets d'une seule application (rôle Administrateur KalanNet) : son tableau de bord ne montre que ses tickets.
+     * Les autres rôles suivent les tickets par la pastille du menu et la cloche.
+     */
+    private function ticketsDeLApplication(User $user, array &$dashboard): void
+    {
+        $app = $user->roleName()?->ticketApp();
+        if ($app === null || ! $user->can('tickets.view')) {
+            return;
+        }
+
+        $tickets = fn () => Ticket::visibleTo($user);
+        $waiting = $tickets()->open()->where('awaiting_team', true)->count();
+        $dashboard['tasks'][] = $this->task('Tickets en attente de votre réponse', "Demandes venues de {$app}", $waiting, 'bx bx-support', 'danger', 'tickets.index');
+
+        $dashboard['sections'][] = ['title' => "Tickets de {$app}", 'icon' => 'bx bx-support', 'cards' => [
+            $this->card('Ouverts', (string) $tickets()->open()->count(), 'en cours de traitement', 'bx bx-folder-open', 'primary'),
+            $this->card('Suivis par moi', (string) $tickets()->open()->where('assigned_to', $user->id)->count(), 'ouverts', 'bx bx-user-check', 'info'),
+            $this->card('Résolus (30 jours)', (string) $tickets()->whereNotNull('closed_at')->where('closed_at', '>=', now()->subDays(30))->count(), 'résolus ou fermés', 'bx bx-check-circle', 'success'),
+        ], 'tables' => [[
+            'title' => 'DERNIERS TICKETS', 'icon' => 'bx bx-list-ul',
+            'columns' => ['Numéro', 'Sujet', 'Demandeur', 'Statut', 'Dernière activité'],
+            'rows' => $tickets()->latest('last_activity_at')->limit(10)->get()->map(fn (Ticket $t) => [
+                $t->number, $t->subject, $t->requesterName(),
+                ['badge' => $t->status->teamLabel(), 'class' => $t->awaiting_team && $t->status->isOpen() ? 'bg-danger-subtle' : 'bg-secondary-subtle'],
+                $t->last_activity_at?->format('d/m/Y H:i') ?? '',
+            ])->all(),
+        ]]];
+    }
+
     /** Partenaires : ses propres résultats (rôle Communication) et commissions à payer (équipe). */
     private function partenaires(User $user, array &$dashboard): void
     {
@@ -345,6 +376,7 @@ class RealDashboardData
             RoleName::Administrateur => 'Administration du site',
             RoleName::Gestionnaire => 'Contenus du site',
             RoleName::Commercial => 'Demandes commerciales',
+            RoleName::AdminKalanNet => 'Tickets de KalanNet',
             default => 'Tableau de bord',
         };
     }
@@ -373,6 +405,10 @@ class RealDashboardData
         ];
 
         $quick = [];
+        // Rôle limité aux tickets d'une application : son seul raccourci.
+        if ($user->roleName()?->ticketApp() !== null && $user->can('tickets.view')) {
+            $quick[] = ['label' => 'Mes tickets', 'icon' => 'bx bx-support', 'route' => 'tickets.index', 'params' => []];
+        }
         foreach ($candidates as [$route, $permission, $label, $icon]) {
             if (Route::has($route) && $user->can($permission)) {
                 $quick[] = ['label' => $label, 'icon' => $icon, 'route' => $route, 'params' => []];

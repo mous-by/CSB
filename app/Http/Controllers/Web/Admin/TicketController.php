@@ -28,11 +28,11 @@ class TicketController extends Controller
 {
     public function __construct(private readonly TicketService $service) {}
 
-    public function index(WebPush $push): View
+    public function index(Request $request, WebPush $push): View
     {
         Gate::authorize('viewAny', Ticket::class);
 
-        return view('tickets.index', ['tickets' => Ticket::with(['client', 'assignee'])->latest('last_activity_at')->get(), 'pushKey' => $push->publicKey()]);
+        return view('tickets.index', ['tickets' => Ticket::visibleTo($request->user())->with(['client', 'assignee'])->latest('last_activity_at')->get(), 'pushKey' => $push->publicKey()]);
     }
 
     public function show(Ticket $ticket): View
@@ -42,7 +42,9 @@ class TicketController extends Controller
         return view('tickets.show', [
             'ticket' => $ticket->load(['client', 'assignee', 'messages.author', 'messages.client']),
             'history' => ActivityLog::where('subject_type', $ticket->getMorphClass())->where('subject_id', $ticket->id)->latest('id')->get(),
-            'assignees' => User::query()->active()->whereHas('roles', fn ($q) => $q->whereIn('name', [RoleName::Commercial->value, RoleName::Administrateur->value, RoleName::Gestionnaire->value]))->orderBy('name')->get(),
+            // L'Administrateur KalanNet n'apparaît que sur les tickets de KalanNet.
+            'assignees' => User::query()->active()->whereHas('roles', fn ($q) => $q->whereIn('name', [RoleName::Commercial->value, RoleName::Administrateur->value, RoleName::Gestionnaire->value, RoleName::AdminKalanNet->value]))->orderBy('name')->get()
+                ->filter(fn (User $u) => $ticket->isVisibleTo($u))->values(),
         ]);
     }
 
@@ -83,7 +85,11 @@ class TicketController extends Controller
             'assigned_to' => ['nullable', 'integer', Rule::exists('users', 'id')->whereNull('deleted_at')],
         ], [], ['priority' => 'priorité', 'assigned_to' => 'suivi par']);
 
-        $this->service->update($ticket, TicketPriority::from($data['priority']), isset($data['assigned_to']) ? User::find($data['assigned_to']) : null);
+        $assignee = isset($data['assigned_to']) ? User::find($data['assigned_to']) : null;
+        if ($assignee && ! $ticket->isVisibleTo($assignee)) {
+            return back()->withErrors(['assigned_to' => 'Cette personne ne peut pas voir ce ticket.']);
+        }
+        $this->service->update($ticket, TicketPriority::from($data['priority']), $assignee);
 
         return redirect()->route('tickets.show', $ticket)->with('status', 'Ticket mis à jour.');
     }

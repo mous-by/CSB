@@ -64,6 +64,11 @@ class UserFactory extends Factory
         return $this->withRole(RoleName::Communication);
     }
 
+    public function adminKalanNet(): static
+    {
+        return $this->withRole(RoleName::AdminKalanNet);
+    }
+
     public function inactive(): static
     {
         return $this->state(fn () => ['is_active' => false]);

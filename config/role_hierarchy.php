@@ -20,15 +20,17 @@ return [
         'gestionnaire' => 50,
         'commercial' => 50,
         'communication' => 30,
+        'admin_kalannet' => 30,
     ],
 
     // Plafond de rôle : rôles qu'un rôle peut créer et gérer.
     'manages' => [
-        'superadmin' => ['superadmin', 'administrateur', 'gestionnaire', 'commercial', 'communication'],
-        'administrateur' => ['gestionnaire', 'commercial', 'communication'],
+        'superadmin' => ['superadmin', 'administrateur', 'gestionnaire', 'commercial', 'communication', 'admin_kalannet'],
+        'administrateur' => ['gestionnaire', 'commercial', 'communication', 'admin_kalannet'],
         'gestionnaire' => [],
         'commercial' => [],
         'communication' => [],
+        'admin_kalannet' => [],
     ],
 
 ];

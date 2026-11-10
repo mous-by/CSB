@@ -21,6 +21,8 @@ return [
         'administrateur' => ['defaults' => ['view', 'update', 'delete', 'apps'], 'optional' => []],
         'commercial' => ['defaults' => ['view', 'update'], 'optional' => ['delete']],
         'gestionnaire' => ['defaults' => [], 'optional' => ['view', 'update']],
+        // Ne voit et ne traite que les tickets venus de l'application KalanNet (RoleName::ticketApp, Ticket::visibleTo).
+        'admin_kalannet' => ['defaults' => ['view', 'update'], 'optional' => []],
     ],
 
     'navigation' => [

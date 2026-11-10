@@ -138,7 +138,7 @@ class TicketService
     private function push(Ticket $ticket, string $title): void
     {
         $from = $ticket->requesterName().($ticket->isExternal() ? " · {$ticket->source_app}" : '');
-        app(PushNotifier::class)->notifyTeam('tickets.view', $title, "{$ticket->subject}\n{$from} · urgence {$ticket->priority->label()}", route('tickets.show', $ticket), $ticket->number);
+        app(PushNotifier::class)->notifyTeam('tickets.view', $title, "{$ticket->subject}\n{$from} · urgence {$ticket->priority->label()}", route('tickets.show', $ticket), $ticket->number, fn (User $member) => $ticket->isVisibleTo($member));
     }
 
     /**

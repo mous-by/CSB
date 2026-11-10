@@ -14,6 +14,8 @@ enum RoleName: string
     case Commercial = 'commercial';
     // Partenaire de diffusion sur les réseaux sociaux (demande de CSB, 2026-10-12) : son espace, son kit, des actualités.
     case Communication = 'communication';
+    // Administrateur de l'application KalanNet (demande de CSB, 2026-11-10) : traite les tickets venus de KalanNet, rien d'autre.
+    case AdminKalanNet = 'admin_kalannet';
 
     public function label(): string
     {
@@ -23,6 +25,19 @@ enum RoleName: string
             self::Gestionnaire => 'Gestionnaire de contenu',
             self::Commercial => 'Commercial',
             self::Communication => 'Communication / réseaux sociaux',
+            self::AdminKalanNet => 'Administrateur KalanNet',
+        };
+    }
+
+    /**
+     * Application connectée dont ce rôle traite les tickets, et seulement ceux-là (nom du jeton, `tickets.source_app`).
+     * Null : le rôle n'est pas limité à une application.
+     */
+    public function ticketApp(): ?string
+    {
+        return match ($this) {
+            self::AdminKalanNet => 'KalanNet',
+            default => null,
         };
     }
 

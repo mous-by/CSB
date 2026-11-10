@@ -83,6 +83,21 @@ class Ticket extends Model
         return $this->messages()->where('is_internal', false);
     }
 
+    /** Tickets que cet utilisateur peut voir : tous, ou seulement ceux de son application (rôle Administrateur KalanNet). */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        $app = $user->roleName()?->ticketApp();
+
+        return $app === null ? $query : $query->where('source_app', $app);
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        $app = $user->roleName()?->ticketApp();
+
+        return $app === null || strcasecmp((string) $this->source_app, $app) === 0;
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereNotIn('status', [TicketStatus::Resolu->value, TicketStatus::Ferme->value]);

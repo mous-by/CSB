@@ -4,6 +4,7 @@ namespace App\Services\Push;
 
 use App\Jobs\SendPushNotification;
 use App\Models\PushSubscription;
+use App\Models\User;
 
 /**
  * Notifications push à l'équipe (nouveau ticket, réponse d'un demandeur…) : chaque appareil abonné d'un membre actif
@@ -14,14 +15,15 @@ class PushNotifier
 {
     public function __construct(private readonly WebPush $push) {}
 
-    public function notifyTeam(string $permission, string $title, string $body, string $url, ?string $tag = null): int
+    /** @param  (callable(User): bool)|null  $canSee  filtre de plus (ex. le ticket est visible de ce membre) */
+    public function notifyTeam(string $permission, string $title, string $body, string $url, ?string $tag = null, ?callable $canSee = null): int
     {
         if (! $this->push->configured()) {
             return 0;
         }
 
         $subscriptions = PushSubscription::with('user')->whereHas('user', fn ($q) => $q->active())->get()
-            ->filter(fn (PushSubscription $s) => $s->user->can($permission));
+            ->filter(fn (PushSubscription $s) => $s->user->can($permission) && ($canSee === null || $canSee($s->user)));
 
         foreach ($subscriptions as $subscription) {
             SendPushNotification::dispatchAfterResponse($subscription->id, ['title' => $title, 'body' => $body, 'url' => $url, 'tag' => $tag]);

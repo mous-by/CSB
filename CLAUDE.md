@@ -148,6 +148,8 @@ Site web professionnel de **Computer Service Barry (CSB)** — « Qualité • F
 
 **Reste** (dépend de CSB) : contenus réels (logo, textes officiels, logiciels avec captures, matériel avec prix, réalisations autorisées, témoignages), mentions légales, SMTP et destinataire des notifications, audit de l'hébergement et mise en ligne HTTPS (phases 8 et 9). 
 
+**Fait — rôle « Administrateur KalanNet »** (2026-11-10, demande de CSB) : rôle `admin_kalannet` (niveau 30, créé par l'administrateur ou le superadmin), permissions `tickets.view` et `tickets.update` seulement (ni suppression, ni applications connectées, ni aide). `RoleName::ticketApp()` le limite à l'application **KalanNet** (`tickets.source_app`) : `Ticket::visibleTo()` (liste, tableau de bord, pastille, cloche), `Ticket::isVisibleTo()` (TicketPolicy : fiche, réponse, pièce jointe, même par l'adresse d'un autre ticket ; notifications push filtrées par `PushNotifier::notifyTeam(…, $canSee)`). Tableau de bord : « Tickets de KalanNet » (en attente, ouverts, suivis par moi, résolus sur 30 jours, 10 derniers) et le seul raccourci « Mes tickets ». On peut lui attribuer un ticket de KalanNet, jamais un autre. Il n'a pas d'e-mail de compte : il est prévenu par les notifications push (bouton sur la liste des tickets) et, s'il le faut, par une adresse ajoutée aux alertes de l'application (Tickets → Applications connectées). Après déploiement : `php artisan permissions:sync`.
+
 ## 3. Démarrer
 
 Prérequis : PHP ≥ 8.3 (extensions `gd`, `mbstring`, `fileinfo`), Composer 2, MariaDB 10.4+ ou MySQL 8. Aucun Node (D19).
@@ -218,9 +220,11 @@ Cahier §9.1. Colonnes proposées (PROPOSITION TECHNIQUE — À VALIDER). Noms d
 | Rôle | Niveau | Gère les comptes |
 |---|---|---|
 | `superadmin` | 100 | tous |
-| `administrateur` | 80 | `gestionnaire`, `commercial` |
+| `administrateur` | 80 | `gestionnaire`, `commercial`, `communication`, `admin_kalannet` |
 | `gestionnaire` | 50 | aucun |
 | `commercial` | 50 | aucun |
+| `communication` | 30 | aucun |
+| `admin_kalannet` | 30 | aucun |
 
 ### 4.4 Permissions (deux voies)
 
